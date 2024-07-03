@@ -13,8 +13,6 @@ namespace ChatApp.Configurations
              .ReverseMap()
              .ForMember(dest => dest.Password, opt => opt.Ignore())
              .ForMember(dest => dest.UserName, opt => opt.Ignore())
-             .ForMember(dest => dest.RefreshToken, opt => opt.Ignore())
-             .ForMember(dest => dest.RefreshTokenExpired, opt => opt.Ignore())
              .ForMember(dest => dest.modifiedDate, opt => opt.Ignore())
              .ForMember(dest => dest.LastOnline, opt => opt.Ignore())
              .ForMember(dest => dest.UserType, opt => opt.Ignore())

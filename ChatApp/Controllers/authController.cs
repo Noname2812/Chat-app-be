@@ -117,16 +117,14 @@ namespace ChatApp.Controllers
             var refreshToken = FunctionHelper.GenerateRefreshToken();
             if (isExists == null)
             {
-                User newUser = new User { Email = body.Email, createAt = DateTime.Now, modifiedDate = DateTime.Now, Name = body.Name, Avatar = body.Image, UserName = body.Email, Password = body.Email, Address = "Google", userTypeId = 4, Phone = "", RefreshToken = refreshToken, RefreshTokenExpired = DateTime.Now.AddDays(10) };
+                User newUser = new User { Email = body.Email, createAt = DateTime.Now, modifiedDate = DateTime.Now, Name = body.Name, Avatar = body.Image, UserName = body.Email,
+                    Password = body.Email, Address = "Google", userTypeId = 4, Phone = "" };
                 var user = await _dbContext.Create(newUser);
                 var token = FunctionHelper.GenarateToken(_configuration, user.Id);
                 _res.data = new { message = "Login successfully !", user, token, refreshToken };
                 return Ok(_res);
             }
             var tokenGenarated = FunctionHelper.GenarateToken(_configuration, isExists.Id);
-            isExists.RefreshToken = refreshToken;
-            isExists.RefreshTokenExpired = DateTime.Now.AddDays(10);
-            await _dbContext.Update(isExists);
             _res.data = new { message = "Login successfully !", user = isExists, token = tokenGenarated, refreshToken };
             return Ok(_res);
         }
@@ -219,18 +217,18 @@ namespace ChatApp.Controllers
                     return Unauthorized(_res);
                 }
                 string userId = userIdClaim.Value;
-                // add token into blackList cache
-                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));
-                await _cacheService.RemoveDataByKey($"refreshToken:{userId}");
+
                 var user = await _dbContext.GetItemByQuery(x => x.Id == int.Parse(userId), true);
                 if (user == null)
                 {
                     _res.errors = "";
                     return BadRequest(_res);
                 }
-                user.RefreshTokenExpired = DateTime.Now;
-                await _dbContext.Update(user);
+                // add token into blackList cache
+                var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));
+                // remove refresh token
+                await _cacheService.RemoveDataByKey($"refreshToken:{userId}");
                 return Ok(new { message = "Logout successful" });
             }
             catch (Exception ex)
