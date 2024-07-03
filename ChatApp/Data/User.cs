@@ -13,9 +13,6 @@ namespace ChatApp.Data
         public string Password { get; set; }
         public string UserName { get; set; }
         public string? Avatar {  get; set; }
-        public string? RefreshToken { get; set; }
-        public DateTime? RefreshTokenExpired { get; set; }
-
         public DateTime? createAt { get; set; }
         public DateTime? modifiedDate { get; set; }
         public DateTime? LastOnline { get; set; }
