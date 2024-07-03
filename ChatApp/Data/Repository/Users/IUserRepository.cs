@@ -6,5 +6,6 @@
         Task<ICollection<User>?> GetReceivedFriendRequests(int id);
         Task SendFriendRequest(int from, int to);
         Task UpdateFriendRequest(int from, int to, string status);
+        Task UpdateStatusOnline(int userId, bool status);
     }
 }

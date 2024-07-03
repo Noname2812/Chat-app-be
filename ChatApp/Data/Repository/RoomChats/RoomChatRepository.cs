@@ -39,12 +39,17 @@ namespace ChatApp.Data.Repository.RoomChats
         public async Task<List<RoomChat>?> GetAllRoomChatByIdUser(string? id)
         {
             var roomChats = await _dbContext.UserRoomChat.Where(r => r.UserId == int.Parse(id))
-                .Join(_dbContext.RoomChats, user_roomchat => user_roomchat.RoomChatId, room => room.Id, (userroomchat, room) => room).OrderByDescending(r => r.ModifiedDate).Include(r => r.Messages.OrderByDescending(x => x.CreateAt).Skip(0).Take(10)).ToListAsync();
+                .Join(_dbContext.RoomChats, user_roomchat => user_roomchat.RoomChatId, room => room.Id, (userroomchat, room) => room)
+                .OrderByDescending(r => r.ModifiedDate)
+                .Include(r => r.Messages.OrderByDescending(x => x.CreateAt)
+                .Skip(0).Take(10)).ToListAsync();
             return roomChats;
         }
         public async Task<RoomChat?> GetRoomChatById(int roomId, int offset = 0, int limit = 10)
         {
-            var room = await _dbContext.RoomChats.Where(r => r.Id == roomId).Include(x => x.Messages.OrderByDescending(x => x.CreateAt).Take(limit).Skip(offset)).FirstOrDefaultAsync();
+            var room = await _dbContext.RoomChats.Where(r => r.Id == roomId)
+               .Include(r => r.Messages.OrderByDescending(x => x.CreateAt)
+                .Skip(offset).Take(limit)).FirstOrDefaultAsync();
             return room;
         }
         public async Task<RoomChat?> GetRoomChatPrivateBetweenTwoUser(int? userId1, int? userId2)

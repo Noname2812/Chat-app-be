@@ -22,17 +22,15 @@ namespace ChatApp.Hubs
         private readonly IRoomChatRepository _roomChatRepository;
         private readonly ChatAppDBContext _dbContext;
         private readonly ICacheService _cacheService;
+        private readonly IMapper _mapper;
 
-        public ChatHub(IUserRepository userRepository, IRoomChatRepository roomChatRepository, ChatAppDBContext dbContext, ICacheService cacheService) : base()
+        public ChatHub(IUserRepository userRepository, IRoomChatRepository roomChatRepository, ChatAppDBContext dbContext, ICacheService cacheService, IMapper mapper) : base()
         {
             _roomChatRepository = roomChatRepository;
             _userRepository = userRepository;
             _dbContext = dbContext;
             _cacheService = cacheService;
-        }
-        public override async Task OnConnectedAsync()
-        {
-            //await Groups.AddToGroupAsync(Context.ConnectionId, "ChatApp");
+            _mapper = mapper;
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -40,12 +38,7 @@ namespace ChatApp.Hubs
             var current = usersConn.Where(user => user.ConnectionId == Context.ConnectionId).FirstOrDefault();
             if (current != null)
             {
-                var user = await _userRepository.GetItemByQuery(x => x.Id == current.UserId);
-                if (user != null)
-                {
-                    user.LastOnline = DateTime.Now;
-                    await _userRepository.Update(user);
-                }
+                await _userRepository.UpdateStatusOnline(current.UserId, false);
                 // remove cache data
                 await _cacheService.RemoveDataByKey($"list-users-online:{current.UserId}");
                 // return list users online
@@ -61,6 +54,8 @@ namespace ChatApp.Hubs
                 UserId = user.UserId,
                 Avatar = user.Avatar ?? "",
             };
+            // update database
+            await _userRepository.UpdateStatusOnline(user.UserId, true);
             // add user in cache
             await _cacheService.SetData($"list-users-online:{userConn.UserId}", userConn, TimeSpan.FromHours(24));
             // join group chat
@@ -100,9 +95,9 @@ namespace ChatApp.Hubs
         }
         private async Task NotifyFriendsOnline(int id)
         {
-            
             var cachedUserOnline = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
             var friends = await _userRepository.GetFriendsById(id);
+            // list friends was Online
             var onlineFriends = cachedUserOnline
                 .Where(userConn => friends.Any(user => user.Id == userConn.UserId))
                 .ToList();
@@ -115,7 +110,9 @@ namespace ChatApp.Hubs
             // notify all friend
             foreach (var user in onlineFriends)
             {
-                await Clients.Client(user.ConnectionId).SendAsync("ListFriendsOnline", onlineFriends);
+                var temp = await _userRepository.GetFriendsById(user.UserId);
+                var friendResult = _mapper.Map<List<FriendDTO>>(temp);
+                await Clients.Client(user.ConnectionId).SendAsync("ListFriendsOnline", friendResult);
             }
         }
     }

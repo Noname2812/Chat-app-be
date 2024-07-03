@@ -10,6 +10,5 @@
         public string? Avatar { get; set; }
         public DateTime? createAt { get; set; }
         public int? userTypeId { get; set; }
-
     }
 }

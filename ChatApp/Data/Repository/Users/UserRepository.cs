@@ -41,7 +41,7 @@ namespace ChatApp.Data.Repository.Users
             if (request == null)
             {
                 var newRequest = new Friendship { UserId = from, FriendId = to, Status = "Pending", CreatedAt = DateTime.Now };
-                 _dbContext.Friends.Add(newRequest);
+                _dbContext.Friends.Add(newRequest);
                 await _dbContext.SaveChangesAsync();
             }
             else
@@ -59,6 +59,21 @@ namespace ChatApp.Data.Repository.Users
                 request.Status = status;
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task UpdateStatusOnline(int userId, bool status)
+        {
+            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if (user != null)
+            {
+                user.IsOnline = status;
+                if (!status)
+                {
+                    user.LastOnline = DateTime.Now;
+                }
+                await _dbContext.SaveChangesAsync();
+            }
+
         }
     }
 }

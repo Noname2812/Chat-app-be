@@ -16,6 +16,7 @@ namespace ChatApp.Data
         public DateTime? createAt { get; set; }
         public DateTime? modifiedDate { get; set; }
         public DateTime? LastOnline { get; set; }
+        public bool? IsOnline { get; set; }
         public int userTypeId { get; set; }
         public virtual UserType? UserType { get; set; }
         public virtual ICollection<UserRoomChat>? UserRoomChat { get; set; }

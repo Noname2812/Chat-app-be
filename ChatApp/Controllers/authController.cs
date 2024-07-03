@@ -93,10 +93,8 @@ namespace ChatApp.Controllers
                 var refreshToken = FunctionHelper.GenerateRefreshToken();
                 // save cache
                 await _cacheService.SetData($"refreshToken:{userExists.Id}", refreshToken, TimeSpan.FromDays(10));
-                //userExists.RefreshToken = refreshToken;
-                //userExists.RefreshTokenExpired = DateTime.Now.AddDays(10);
-                await _dbContext.Update(userExists);
-                //var friends = await _dbContext.GetFriendsById(userExists.Id);
+                // update database
+                await _dbContext.UpdateStatusOnline(userExists.Id, true);
                 _res.data = new { message = "Login successfully !", user = _mapper.Map<UserDTO>(userExists), token = tokenGenarated, refreshToken };
                 return Ok(_res);
             }
@@ -117,8 +115,19 @@ namespace ChatApp.Controllers
             var refreshToken = FunctionHelper.GenerateRefreshToken();
             if (isExists == null)
             {
-                User newUser = new User { Email = body.Email, createAt = DateTime.Now, modifiedDate = DateTime.Now, Name = body.Name, Avatar = body.Image, UserName = body.Email,
-                    Password = body.Email, Address = "Google", userTypeId = 4, Phone = "" };
+                User newUser = new User
+                {
+                    Email = body.Email,
+                    createAt = DateTime.Now,
+                    modifiedDate = DateTime.Now,
+                    Name = body.Name,
+                    Avatar = body.Image,
+                    UserName = body.Email,
+                    Password = body.Email,
+                    Address = "Google",
+                    userTypeId = 4,
+                    Phone = ""
+                };
                 var user = await _dbContext.Create(newUser);
                 var token = FunctionHelper.GenarateToken(_configuration, user.Id);
                 _res.data = new { message = "Login successfully !", user, token, refreshToken };
@@ -217,13 +226,8 @@ namespace ChatApp.Controllers
                     return Unauthorized(_res);
                 }
                 string userId = userIdClaim.Value;
-
-                var user = await _dbContext.GetItemByQuery(x => x.Id == int.Parse(userId), true);
-                if (user == null)
-                {
-                    _res.errors = "";
-                    return BadRequest(_res);
-                }
+                // update database
+                await _dbContext.UpdateStatusOnline(int.Parse(userId), false);
                 // add token into blackList cache
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));

@@ -15,6 +15,7 @@ namespace WebAPI.Data.config
             builder.Property(n => n.Password).IsRequired().HasMaxLength(30);
             builder.Property(n => n.Address).HasMaxLength(100);
             builder.Property(n => n.Email);
+            builder.Property(n => n.IsOnline).HasDefaultValue(false);
             builder.HasIndex(x => x.Email).IsUnique();
             builder.Property(n => n.Phone).HasMaxLength(11);
             builder.Property(n => n.userTypeId);
