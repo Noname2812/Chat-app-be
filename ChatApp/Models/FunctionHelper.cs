@@ -12,6 +12,17 @@ namespace ChatApp.Models
     public static class FunctionHelper
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        public static string? GetUserId(HttpContext context)
+        {
+            var claimsPrincipal = context.User;
+            var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId");
+            if (userIdClaim != null)
+            {
+                string userId = userIdClaim.Value;
+                return userId;
+            }
+            return null;
+        }
         public static string? GenarateToken(IConfiguration configuration, int id)
         {
             var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("JWTSecret"));
@@ -42,7 +53,7 @@ namespace ChatApp.Models
             }
             return result.ToString();
         }
-        public static async Task<string> GetNameRoomByTwoIds(int id1, int id2,IUserRepository _userRepository)
+        public static async Task<string> GetNameRoomByTwoIds(int id1, int id2, IUserRepository _userRepository)
         {
             var fromUser = await _userRepository.GetItemByQuery(x => x.Id == id1);
             var toUser = await _userRepository.GetItemByQuery(x => x.Id == id2);

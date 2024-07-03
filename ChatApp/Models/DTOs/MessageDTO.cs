@@ -1,5 +1,4 @@
-﻿using ChatApp.Data;
-using System.ComponentModel.DataAnnotations;
+﻿
 
 namespace ChatApp.Models.DTOs
 {

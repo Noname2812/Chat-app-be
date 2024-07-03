@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using ChatApp.Data;
 using ChatApp.Data.Repository.Messages;
 using ChatApp.Data.Repository.Users;
+using ChatApp.Models;
 using ChatApp.Models.DTOs;
 using ChatApp.Models.RequestModels;
 using ChatApp.Models.ResponeModels;
@@ -29,14 +31,15 @@ namespace ChatApp.Controllers
         {
             try
             {
-                var claimsPrincipal = HttpContext.User;
-                var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId");
-                if (userIdClaim == null)
-                {
-                    _res.errors = "User ID claim is missing!";
-                    return Unauthorized(_res);
-                }
-                string userId = userIdClaim.Value;
+                //var claimsPrincipal = HttpContext.User;
+                //var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId");
+                //if (userIdClaim == null)
+                //{
+                //    _res.errors = "User ID claim is missing!";
+                //    return Unauthorized(_res);
+                //}
+                //string userId = userIdClaim.Value;
+                string? userId = FunctionHelper.GetUserId(HttpContext);
                 if (!int.TryParse(userId, out int parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
@@ -111,6 +114,120 @@ namespace ChatApp.Controllers
             catch (Exception ex)
             {
                 _res.errors = ex.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError, _res);
+            }
+        }
+        [HttpGet("received-add-friend-requests")]
+        public async Task<ActionResult<Respone>> GetReceivedAddFriendRequests()
+        {
+            string? userId = FunctionHelper.GetUserId(HttpContext);
+            if (!int.TryParse(userId, out int parsedUserId))
+            {
+                _res.errors = "Invalid user ID!";
+                return BadRequest(_res);
+            }
+            var data = await _userRepository.GetReceivedFriendRequests(parsedUserId);
+            _res.data = _mapper.Map<List<UserDTO>>(data);
+            return Ok(_res);
+        }
+        [HttpPost]
+        [Route("send-request-add-friend")]
+        public async Task<ActionResult<Respone>> SendRequestAddFriend([FromBody] FriendShipDTO body)
+        {
+            if (body == null)
+            {
+                _res.errors = new
+                {
+                    message = "Please provide body"
+                };
+                return BadRequest(_res);
+            }
+            try
+            {
+                string? userId = FunctionHelper.GetUserId(HttpContext);
+                if (!int.TryParse(userId, out int parsedUserId))
+                {
+                    _res.errors = "Invalid user ID!";
+                    return BadRequest(_res);
+                }
+                await _userRepository.SendFriendRequest(parsedUserId, body.FriendId);
+                _res.data = new
+                {
+                    message = "Create request successfully !"
+                };
+                return Ok(_res);
+
+
+            }
+            catch (Exception ex)
+            {
+                _res.errors = new { message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, _res);
+            }
+        }
+        [HttpPut]
+        [Route("accept-request-add-friend")]
+        public async Task<ActionResult<Respone>> AcceptRequestAddFriend([FromBody] FriendShipDTO body)
+        {
+            if (body == null)
+            {
+                _res.errors = new
+                {
+                    message = "Please provide body"
+                };
+                return BadRequest(_res);
+            }
+            try
+            {
+                string? userId = FunctionHelper.GetUserId(HttpContext);
+                if (!int.TryParse(userId, out int parsedUserId))
+                {
+                    _res.errors = "Invalid user ID!";
+                    return BadRequest(_res);
+                }
+                await _userRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Accepted");
+                _res.data = new
+                {
+                    message = "Accepted request successfully !"
+                };
+                return Ok(_res);
+            }
+            catch (Exception ex)
+            {
+                _res.errors = new { message = ex.Message };
+                return StatusCode(StatusCodes.Status500InternalServerError, _res);
+            }
+        }
+        [HttpPut]
+        [Route("reject-request-add-friend")]
+        public async Task<ActionResult<Respone>> RejectRequestAddFriend([FromBody] FriendShipDTO body)
+        {
+            if (body == null)
+            {
+                _res.errors = new
+                {
+                    message = "Please provide body"
+                };
+                return BadRequest(_res);
+            }
+            try
+            {
+                string? userId = FunctionHelper.GetUserId(HttpContext);
+                if (!int.TryParse(userId, out int parsedUserId))
+                {
+                    _res.errors = "Invalid user ID!";
+                    return BadRequest(_res);
+                }
+                await _userRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Rejected");
+                _res.data = new
+                {
+                    message = "Rejected request successfully !"
+                };
+                return Ok(_res);
+            }
+            catch (Exception ex)
+            {
+                _res.errors = new { message = ex.Message };
                 return StatusCode(StatusCodes.Status500InternalServerError, _res);
             }
         }

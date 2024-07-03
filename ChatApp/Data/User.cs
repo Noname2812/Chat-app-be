@@ -1,5 +1,6 @@
 ﻿using WebAPI.Data;
 
+
 namespace ChatApp.Data
 {
     public class User
@@ -14,6 +15,7 @@ namespace ChatApp.Data
         public string? Avatar {  get; set; }
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpired { get; set; }
+
         public DateTime? createAt { get; set; }
         public DateTime? modifiedDate { get; set; }
         public DateTime? LastOnline { get; set; }
@@ -22,6 +24,7 @@ namespace ChatApp.Data
         public virtual ICollection<UserRoomChat>? UserRoomChat { get; set; }
         public virtual ICollection<Message>? Messages { get; set; }
         public virtual ICollection<UserRoleMapping>? UserRoleMappings { get; set; }
-
+        public ICollection<Friendship> Friends { get; set; }
+        public ICollection<Friendship> FriendsOf { get; set; }
     }
 }

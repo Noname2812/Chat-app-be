@@ -1,8 +1,10 @@
 ﻿
+using AutoMapper;
 using ChatApp.Data;
 using ChatApp.Data.Repository.RoomChats;
 using ChatApp.Data.Repository.Users;
 using ChatApp.Models;
+using ChatApp.Models.DTOs;
 using ChatApp.Models.Request;
 using ChatApp.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -21,7 +23,7 @@ namespace ChatApp.Hubs
         private readonly ChatAppDBContext _dbContext;
         private readonly ICacheService _cacheService;
 
-        public ChatHub( IUserRepository userRepository, IRoomChatRepository roomChatRepository, ChatAppDBContext dbContext, ICacheService cacheService) : base()
+        public ChatHub(IUserRepository userRepository, IRoomChatRepository roomChatRepository, ChatAppDBContext dbContext, ICacheService cacheService) : base()
         {
             _roomChatRepository = roomChatRepository;
             _userRepository = userRepository;
@@ -30,7 +32,7 @@ namespace ChatApp.Hubs
         }
         public override async Task OnConnectedAsync()
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, "ChatApp");
+            //await Groups.AddToGroupAsync(Context.ConnectionId, "ChatApp");
         }
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -46,11 +48,9 @@ namespace ChatApp.Hubs
                 }
                 // remove cache data
                 await _cacheService.RemoveDataByKey($"list-users-online:{current.UserId}");
+                // return list users online
+                await NotifyFriendsOnline(current.UserId);
             }
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "ChatApp");
-            // return list users online
-            var cachedUserOnline = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
-            await Clients.Group("ChatApp").SendAsync("GetListUserOnline", cachedUserOnline);
         }
         public async Task AddUserConnection(UserConnection user)
         {
@@ -59,20 +59,20 @@ namespace ChatApp.Hubs
                 ConnectionId = Context.ConnectionId,
                 Name = user.Name,
                 UserId = user.UserId,
+                Avatar = user.Avatar ?? "",
             };
             // add user in cache
-            await _cacheService.SetData($"list-users-online:{userConn.UserId}", userConn, TimeSpan.FromSeconds(6000));
+            await _cacheService.SetData($"list-users-online:{userConn.UserId}", userConn, TimeSpan.FromHours(24));
+            // join group chat
             var roomChats = await _dbContext.UserRoomChat.Where(r => r.UserId == user.UserId)
-                .Join(_dbContext.RoomChats, user_roomchat => user_roomchat.RoomChatId, room => room.Id, (userroomchat, room) => room).Where(r => r.IsPrivate == false).ToListAsync();
+                .Join(_dbContext.RoomChats, user_roomchat => user_roomchat.RoomChatId, room => room.Id, (userroomchat, room) => room)
+                .Where(r => r.IsPrivate == false).ToListAsync();
             foreach (var room in roomChats)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, room.Name);
             }
-
-            // get users online in cache
-            var cachedUserOnline = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
-            await Clients.Group("ChatApp").SendAsync("GetListUserOnline", cachedUserOnline);
-            await Clients.Others.SendAsync("NotifyUserOnline", user.Name);
+            // notify list friends online
+            await NotifyFriendsOnline(user.UserId);
         }
         public async Task SendMessage(MessageRequest req)
         {
@@ -83,7 +83,7 @@ namespace ChatApp.Hubs
                 {
                     var usersConn = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
                     var toUser = usersConn.Where(user => user.UserId == to.UserId).FirstOrDefault();
-                    if (toUser.ConnectionId != null)
+                    if (toUser != null && toUser.ConnectionId != null)
                     {
                         await Clients.Client(toUser.ConnectionId).SendAsync("ReceiveMessagePrivate", to.RoomChatId.ToString());
                     }
@@ -96,6 +96,26 @@ namespace ChatApp.Hubs
                 {
                     await Clients.Group(room.Name).SendAsync("ReceiveMessageFromGroup", req.RoomId.ToString());
                 }
+            }
+        }
+        private async Task NotifyFriendsOnline(int id)
+        {
+            
+            var cachedUserOnline = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
+            var friends = await _userRepository.GetFriendsById(id);
+            var onlineFriends = cachedUserOnline
+                .Where(userConn => friends.Any(user => user.Id == userConn.UserId))
+                .ToList();
+            //  check notify for caller
+            var caller = cachedUserOnline.Where(u => u.UserId == id).FirstOrDefault();
+            if (caller != null)
+            {
+                onlineFriends.Add(caller);
+            }
+            // notify all friend
+            foreach (var user in onlineFriends)
+            {
+                await Clients.Client(user.ConnectionId).SendAsync("ListFriendsOnline", onlineFriends);
             }
         }
     }

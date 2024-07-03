@@ -25,21 +25,6 @@ namespace ChatApp.Services
             return string.IsNullOrEmpty(res) ? "" : res;
         }
 
-        public async Task RemoveCacheByPartern(string key, string partern)
-        {
-            if (string.IsNullOrEmpty(partern))
-            {
-                throw new ArgumentException("Value cannot null or emty !");
-            }
-            var data = await _database.ListRangeAsync(key);
-            long index = Array.IndexOf(data, (RedisValue)partern);
-            if (index >= 0)
-            {
-                // Thực hiện thao tác remove
-                await _database.ListSetByIndexAsync(key, index, RedisValue.Null);
-                await _database.ListRemoveAsync(key, RedisValue.Null);
-            }
-        }
 
         public async Task RemoveDataByKey(string key)
         {

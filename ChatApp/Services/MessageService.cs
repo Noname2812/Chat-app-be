@@ -7,6 +7,7 @@ namespace ChatApp.Services
     {
         public MessageService(ChatAppDBContext db) : base(db)
         {
+
         }
 
     }

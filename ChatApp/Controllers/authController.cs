@@ -80,6 +80,7 @@ namespace ChatApp.Controllers
             try
             {
                 User? userExists = await _dbContext.GetItemByQuery(x => x.UserName == loginModel.Username && x.Password == loginModel.Password);
+
                 if (userExists == null)
                 {
                     _res.errors = new
@@ -92,9 +93,9 @@ namespace ChatApp.Controllers
                 var refreshToken = FunctionHelper.GenerateRefreshToken();
                 userExists.RefreshToken = refreshToken;
                 userExists.RefreshTokenExpired = DateTime.Now.AddDays(10);
-                var userRes = _mapper.Map<UserDTO>(userExists);
                 await _dbContext.Update(userExists);
-                _res.data = new { message = "Login successfully !", user = userRes, token = tokenGenarated, refreshToken };
+                //var friends = await _dbContext.GetFriendsById(userExists.Id);
+                _res.data = new { message = "Login successfully !", user = _mapper.Map<UserDTO>(userExists), token = tokenGenarated, refreshToken };
                 return Ok(_res);
             }
             catch (Exception ex)

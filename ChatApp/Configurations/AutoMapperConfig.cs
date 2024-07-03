@@ -30,6 +30,13 @@ namespace ChatApp.Configurations
                 .ForMember(dest => dest.ModifiedDate, opt => opt.Ignore())
                 .ForMember(dest => dest.UserRoomChat, opt => opt.Ignore());
 
+            // config friend DTO
+            CreateMap<Friendship, FriendShipDTO>().ReverseMap()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.FriendId, opt => opt.MapFrom(src => src.FriendId))
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                .ForMember(dest => dest.Friend, opt => opt.Ignore());
+
 
             //example
             // config different property

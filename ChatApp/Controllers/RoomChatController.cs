@@ -30,6 +30,7 @@ namespace ChatApp.Controllers
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        //[Cache(3600)]
         public async Task<ActionResult<Respone>> getAllRoomChatByUser()
         {
             var claimsPrincipal = HttpContext.User;
@@ -40,7 +41,6 @@ namespace ChatApp.Controllers
             return Ok(_res);
         }
         [HttpGet]
-        [Cache(30)]
         [Route("{id:int}", Name = "getRoomChatById")]
         public async Task<ActionResult<Respone>> getRoomChatById([FromRoute] int id, [FromQuery] FilterQuery? query)
         {

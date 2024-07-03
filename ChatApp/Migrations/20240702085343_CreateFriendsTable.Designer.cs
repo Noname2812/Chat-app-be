@@ -4,6 +4,7 @@ using ChatApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApp.Migrations
 {
     [DbContext(typeof(ChatAppDBContext))]
-    partial class ChatAppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240702085343_CreateFriendsTable")]
+    partial class CreateFriendsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +25,7 @@ namespace ChatApp.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ChatApp.Data.Friendship", b =>
+            modelBuilder.Entity("ChatApp.Data.FriendTable", b =>
                 {
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -30,20 +33,12 @@ namespace ChatApp.Migrations
                     b.Property<int>("FriendId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("Pending");
 
                     b.HasKey("UserId", "FriendId");
 
-                    b.HasIndex("FriendId");
-
-                    b.ToTable("Friends");
+                    b.ToTable("Friends", (string)null);
                 });
 
             modelBuilder.Entity("ChatApp.Data.Message", b =>
@@ -319,23 +314,15 @@ namespace ChatApp.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.Friendship", b =>
+            modelBuilder.Entity("ChatApp.Data.FriendTable", b =>
                 {
                     b.HasOne("ChatApp.Data.User", "Friend")
-                        .WithMany("FriendsOf")
-                        .HasForeignKey("FriendId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ChatApp.Data.User", "User")
                         .WithMany("Friends")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Friend");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ChatApp.Data.Message", b =>
@@ -440,8 +427,6 @@ namespace ChatApp.Migrations
             modelBuilder.Entity("ChatApp.Data.User", b =>
                 {
                     b.Navigation("Friends");
-
-                    b.Navigation("FriendsOf");
 
                     b.Navigation("Messages");
 

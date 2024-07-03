@@ -7,17 +7,18 @@ namespace ChatApp.Data
     public class ChatAppDBContext : DbContext
     {
         public ChatAppDBContext(DbContextOptions<ChatAppDBContext> options) : base(options)
-        {   
-            
+        {
+
         }
         public DbSet<Message> Messages { get; set; }
         public DbSet<RoomChat> RoomChats { get; set; }
-        public DbSet<UserRoomChat> UserRoomChat {  get; set; }
+        public DbSet<UserRoomChat> UserRoomChat { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<RolePrivilege> RolePrivileges { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserType> UserTypes { get; set; }
         public DbSet<UserRoleMapping> UserRoles { get; set; }
+        public DbSet<Friendship> Friends { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -29,6 +30,7 @@ namespace ChatApp.Data
             modelBuilder.ApplyConfiguration(new RolePrivilegeConfig());
             modelBuilder.ApplyConfiguration(new RolePrivilegeConfig());
             modelBuilder.ApplyConfiguration(new UserTypeConfig());
+            modelBuilder.ApplyConfiguration(new FriendshipConfig());
 
         }
     }

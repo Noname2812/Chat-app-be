@@ -44,21 +44,20 @@ namespace ChatApp.Data.Repository.RoomChats
         }
         public async Task<RoomChat?> GetRoomChatById(int roomId, int offset = 0, int limit = 10)
         {
-            var room = await _dbContext.RoomChats.Where(r => r.Id == roomId).Include(x => x.Messages.Take(limit).Skip(offset)).FirstOrDefaultAsync();
+            var room = await _dbContext.RoomChats.Where(r => r.Id == roomId).Include(x => x.Messages.OrderByDescending(x => x.CreateAt).Take(limit).Skip(offset)).FirstOrDefaultAsync();
             return room;
         }
         public async Task<RoomChat?> GetRoomChatPrivateBetweenTwoUser(int? userId1, int? userId2)
         {
             if (userId1 == null || userId2 == null) { return null; }
-            var roomUser_1 = await _dbContext.RoomChats.Where(r => r.IsPrivate).Include(x => x.UserRoomChat).Include(x => x.Messages.Take(10).Skip(0)).ToListAsync();
-            var roomUser_2 = await _dbContext.RoomChats.Where(r => r.IsPrivate).Include(x => x.UserRoomChat
-            .Where(r => r.UserId == userId2)).Include(x => x.Messages.Take(10).Skip(0)).ToListAsync();
-            var r1 = await _dbContext.UserRoomChat.Where(x => x.UserId == userId1).ToListAsync();
-            var r2 = await _dbContext.UserRoomChat.Where(x => x.UserId == userId2).ToListAsync();
-            if (r1.Count > 0 && r2.Count > 0)
+            var userRoomResult = await (from urc1 in _dbContext.UserRoomChat
+                                    join urc2 in _dbContext.UserRoomChat
+                                    on urc1.RoomChatId equals urc2.RoomChatId
+                                    where urc1.UserId == userId1 && urc2.UserId == userId2
+                                    select urc1).FirstOrDefaultAsync();
+            if (userRoomResult is not null)
             {
-                var roomResult = roomUser_1.Intersect(roomUser_2).FirstOrDefault();
-                return roomResult;
+                return await _dbContext.RoomChats.Where(x => x.Id == userRoomResult.RoomChatId).FirstOrDefaultAsync();
             }
             return null;
         }

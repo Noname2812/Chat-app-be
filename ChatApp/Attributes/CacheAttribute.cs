@@ -1,4 +1,5 @@
-﻿using ChatApp.Services;
+﻿using Azure.Core;
+using ChatApp.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Text;
@@ -14,29 +15,52 @@ namespace ChatApp.Attributes
         }
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            var cacheService = context.HttpContext.RequestServices.GetRequiredService<ICacheService>();
-            var keyCache = GenarateCacheKeyFromRequest(context.HttpContext.Request);
-            var cacheRespone = await cacheService.GetDataByKey(keyCache);
-            if (!string.IsNullOrEmpty(cacheRespone))
+            var path = context.HttpContext.Request.Path;
+            string? keyCache = null;
+            // cache by path request
+            switch (path)
             {
-                var contentResult = new ContentResult { ContentType = "application/json", Content = cacheRespone, StatusCode = 200 };
-                context.Result = contentResult;
-                return;
+                case "/api/room":
+                    var claimsPrincipal = context.HttpContext.User;
+                    string? userId = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId")?.Value;
+                    keyCache = GenarateCacheKeyFromRequest(context.HttpContext.Request, userId);
+                    break;
+                default:
+                    break;
+            }
+            var cacheService = context.HttpContext.RequestServices.GetRequiredService<ICacheService>();
+            if(!string.IsNullOrEmpty(keyCache))
+            {
+                var cacheRespone = await cacheService.GetDataByKey(keyCache);
+                if (!string.IsNullOrEmpty(cacheRespone))
+                {
+                    var contentResult = new ContentResult { ContentType = "application/json", Content = cacheRespone, StatusCode = 200 };
+                    context.Result = contentResult;
+                    return;
+                }
             }
             var excutedConext = await next();
-            if (excutedConext.Result is OkObjectResult ojResult)
+            // set cache
+            if (excutedConext.Result is OkObjectResult ojResult && !string.IsNullOrEmpty(keyCache))
             {
                 await cacheService.SetData(keyCache, ojResult.Value, TimeSpan.FromSeconds(_timeToLiveSeconds));
             }
         }
-        private static string GenarateCacheKeyFromRequest(HttpRequest request)
+        private static string GenarateCacheKeyFromRequest(HttpRequest request, string? userId = null)
         {
+
             var keyBulder = new StringBuilder();
-            keyBulder.Append($"{request.Path}");
+            if(!string.IsNullOrEmpty(userId))
+            {
+                keyBulder.Append($"{request.Path}:{userId}");
+            }
+            else
+            {
+                keyBulder.Append($"{request.Path}");
+            }
             foreach (var (key, value) in request.Query.OrderBy(x => x.Key))
             {
                 keyBulder.Append($"|{key}-{value}");
-
             }
             return keyBulder.ToString();
         }
