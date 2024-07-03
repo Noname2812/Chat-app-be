@@ -27,7 +27,7 @@ namespace ChatApp.Models
         {
             var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("JWTSecret"));
             var tokenHandler = new JwtSecurityTokenHandler();
-            var expiresAt = DateTime.Now.AddMinutes(10);
+            var expiresAt = DateTime.Now.AddSeconds(10);
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
                 //payload

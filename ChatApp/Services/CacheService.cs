@@ -19,10 +19,10 @@ namespace ChatApp.Services
             _database = connectionMultiplexer.GetDatabase();
             _connectionMultiplexer = connectionMultiplexer;
         }
-        public async Task<string> GetDataByKey(string key)
+        public async Task<string?> GetDataByKey(string key)
         {
             var res = await _distributedCache.GetStringAsync(key);
-            return string.IsNullOrEmpty(res) ? "" : res;
+            return string.IsNullOrEmpty(res) ? "" : JsonConvert.DeserializeObject<string>(res);
         }
 
 

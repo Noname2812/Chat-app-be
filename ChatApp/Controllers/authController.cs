@@ -91,8 +91,10 @@ namespace ChatApp.Controllers
                 }
                 var tokenGenarated = FunctionHelper.GenarateToken(_configuration, userExists.Id);
                 var refreshToken = FunctionHelper.GenerateRefreshToken();
-                userExists.RefreshToken = refreshToken;
-                userExists.RefreshTokenExpired = DateTime.Now.AddDays(10);
+                // save cache
+                await _cacheService.SetData($"refreshToken:{userExists.Id}", refreshToken, TimeSpan.FromDays(10));
+                //userExists.RefreshToken = refreshToken;
+                //userExists.RefreshTokenExpired = DateTime.Now.AddDays(10);
                 await _dbContext.Update(userExists);
                 //var friends = await _dbContext.GetFriendsById(userExists.Id);
                 _res.data = new { message = "Login successfully !", user = _mapper.Map<UserDTO>(userExists), token = tokenGenarated, refreshToken };
@@ -167,30 +169,26 @@ namespace ChatApp.Controllers
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-
                 User? user = await _dbContext.GetItemByQuery(x => x.Id == parsedUserId);
                 if (user == null)
                 {
                     _res.errors = "User not found!";
                     return NotFound(_res);
                 }
-
-                if (user.RefreshToken != token.refreshToken)
-                {
-                    _res.errors = "Invalid refresh token!";
-                    return Unauthorized(_res);
-                }
-
-                if (user.RefreshTokenExpired < DateTime.Now)
+                var refreshTokenExists = await _cacheService.GetDataByKey($"refreshToken:{parsedUserId}");
+                if (string.IsNullOrEmpty(refreshTokenExists))
                 {
                     _res.errors = "Refresh token has expired!";
                     return Unauthorized(_res);
                 }
+                if (refreshTokenExists != token.refreshToken)
+                {
+                    _res.errors = "Refresh token invalid!";
+                    return Unauthorized(_res);
+                }
                 var newAccessToken = FunctionHelper.GenarateToken(_configuration, user.Id);
                 var newRefreshToken = FunctionHelper.GenerateRefreshToken();
-                user.RefreshToken = newRefreshToken;
-                user.RefreshTokenExpired = DateTime.Now.AddDays(10);
-                await _dbContext.Update(user);
+                await _cacheService.SetData($"refreshToken:{parsedUserId}", newRefreshToken, TimeSpan.FromDays(10));
                 _res.data = new
                 {
                     AccessToken = newAccessToken,
@@ -224,6 +222,7 @@ namespace ChatApp.Controllers
                 // add token into blackList cache
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));
+                await _cacheService.RemoveDataByKey($"refreshToken:{userId}");
                 var user = await _dbContext.GetItemByQuery(x => x.Id == int.Parse(userId), true);
                 if (user == null)
                 {
