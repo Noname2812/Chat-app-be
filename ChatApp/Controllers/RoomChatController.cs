@@ -1,6 +1,5 @@
 ﻿
 using AutoMapper;
-using ChatApp.Attributes;
 using ChatApp.Data.Repository.Messages;
 using ChatApp.Data.Repository.RoomChats;
 using ChatApp.Models.DTOs;

@@ -10,10 +10,6 @@ using ChatApp.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-
-
-
-
 namespace ChatApp.Hubs
 {
     public class ChatHub : Hub
@@ -71,27 +67,28 @@ namespace ChatApp.Hubs
         }
         public async Task SendMessage(MessageRequest req)
         {
-            if (req.isPrivate)
+            var room = await _roomChatRepository.GetItemByQuery(x => x.Id == req.RoomId);
+            if (room != null)
             {
-                var to = await _dbContext.UserRoomChat.Where(x => x.RoomChatId == req.RoomId && x.UserId != req.from).FirstOrDefaultAsync();
-                if (to != null)
+                if (room.IsPrivate)
                 {
-                    var usersConn = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
-                    var toUser = usersConn.Where(user => user.UserId == to.UserId).FirstOrDefault();
-                    if (toUser != null && toUser.ConnectionId != null)
+                    var to = await _dbContext.UserRoomChat.Where(x => x.RoomChatId == req.RoomId && x.UserId != req.from).FirstOrDefaultAsync();
+                    if (to != null)
                     {
-                        await Clients.Client(toUser.ConnectionId).SendAsync("ReceiveMessagePrivate", to.RoomChatId.ToString());
+                        var usersOnl = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");
+                        var toUser = usersOnl.Where(user => user.UserId == to.UserId).FirstOrDefault();
+                        if (toUser != null && toUser.ConnectionId != null)
+                        {
+                            await Clients.Client(toUser.ConnectionId).SendAsync("ReceiveMessagePrivate", to.RoomChatId.ToString());
+                        }
                     }
                 }
-            }
-            else
-            {
-                var room = await _roomChatRepository.GetItemByQuery(x => x.Id == req.RoomId);
-                if (room != null)
+                else
                 {
                     await Clients.Group(room.Name).SendAsync("ReceiveMessageFromGroup", req.RoomId.ToString());
                 }
             }
+
         }
         private async Task NotifyFriendsOnline(int id)
         {

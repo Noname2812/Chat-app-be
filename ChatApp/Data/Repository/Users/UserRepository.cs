@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ChatApp.Models.DTOs;
+using ChatApp.Models.ResponeModels;
+using Microsoft.EntityFrameworkCore;
 namespace ChatApp.Data.Repository.Users
 {
     public class UserRepository : ChatAppRepository<User>, IUserRepository
@@ -13,7 +15,7 @@ namespace ChatApp.Data.Repository.Users
             var user = await _dbContext.Users
             .Include(u => u.Friends.Where(x => x.Status == "Accepted"))
                 .ThenInclude(f => f.Friend)
-            .Include(u => u.FriendsOf)
+            .Include(u => u.FriendsOf.Where(x => x.Status == "Accepted"))
                 .ThenInclude(f => f.User)
             .FirstOrDefaultAsync(u => u.Id == userId);
             var friends = user.Friends.Select(f => f.Friend)
@@ -35,25 +37,30 @@ namespace ChatApp.Data.Repository.Users
             return receivedRequests;
         }
 
-        public async Task SendFriendRequest(int from, int to)
+        public async Task<List<SearchUserResult>> SearchUserByQuery(string query, int id, int offset = 0, int limit = 10)
         {
-            var request = await _dbContext.Friends.Where(x => (x.UserId == from && x.FriendId == to) || (x.UserId == to && x.FriendId == from)).FirstOrDefaultAsync();
+
+            var users = await _dbContext.Users.Where(x => (x.Name.ToLower().IndexOf(query.ToLower()) > -1
+            || x.Email.ToLower().IndexOf(query.ToLower()) > -1) && x.Id != id).Take(limit).Skip(offset).ToListAsync();
+            return users.Select(x => new SearchUserResult { Avatar = x.Avatar, Id = x.Id, Name = x.Name, FriendShip = getStatusFriend(id, x.Id) }).ToList();
+        }
+
+        public async Task<Friendship?> SendFriendRequest(int from, int to)
+        {
+            var request = await _dbContext.Friends.Where(x => x.UserId == from && x.FriendId == to).FirstOrDefaultAsync();
             if (request == null)
             {
                 var newRequest = new Friendship { UserId = from, FriendId = to, Status = "Pending", CreatedAt = DateTime.Now };
                 _dbContext.Friends.Add(newRequest);
                 await _dbContext.SaveChangesAsync();
+                return newRequest;
             }
-            else
-            {
-                request.Status = "Accepted";
-                await _dbContext.SaveChangesAsync();
-            }
+            return null;
         }
 
         public async Task UpdateFriendRequest(int from, int to, string status)
         {
-            var request = await _dbContext.Friends.Where(x => x.UserId == from && x.FriendId == to).FirstOrDefaultAsync();
+            var request = await _dbContext.Friends.Where(x => (x.UserId == from && x.FriendId == to) || (x.UserId == to && x.FriendId == from)).FirstOrDefaultAsync();
             if (request != null)
             {
                 request.Status = status;
@@ -73,6 +80,16 @@ namespace ChatApp.Data.Repository.Users
                 }
                 await _dbContext.SaveChangesAsync();
             }
+
+        }
+        private FriendShipDTO? getStatusFriend(int id, int friendId)
+        {
+            var requestAddFriend = _dbContext.Friends.Where(x => (x.UserId == id && x.FriendId == friendId) || (x.UserId == friendId && x.FriendId == id)).FirstOrDefault();
+            if (requestAddFriend != null)
+            {
+                return new FriendShipDTO { FriendId = requestAddFriend.FriendId, Status = requestAddFriend.Status, UserId = requestAddFriend.UserId };
+            }
+            return null;
 
         }
     }

@@ -35,6 +35,8 @@ namespace ChatApp.Configurations
             CreateMap<Friendship, FriendShipDTO>().ReverseMap()
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.FriendId, opt => opt.MapFrom(src => src.FriendId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+
                 .ForMember(dest => dest.User, opt => opt.Ignore())
                 .ForMember(dest => dest.Friend, opt => opt.Ignore());
             // config friendDTO

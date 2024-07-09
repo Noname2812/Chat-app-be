@@ -66,7 +66,7 @@ namespace ChatApp.Controllers
                             }
                         }
                         await _messageRespository.AddListData(msgs);
-                        _res.data = new { msgs, roomId = newRoomChat.Id, to = req.to };
+                        _res.data = new { messages = _mapper.Map<List<MessageDTO>>(msgs), roomId = newRoomChat.Id, to = req.to };
                         return Ok(_res);
                     }
                     _res.errors = "Please provide room id !";

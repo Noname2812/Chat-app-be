@@ -31,14 +31,6 @@ namespace ChatApp.Controllers
         {
             try
             {
-                //var claimsPrincipal = HttpContext.User;
-                //var userIdClaim = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId");
-                //if (userIdClaim == null)
-                //{
-                //    _res.errors = "User ID claim is missing!";
-                //    return Unauthorized(_res);
-                //}
-                //string userId = userIdClaim.Value;
                 string? userId = FunctionHelper.GetUserId(HttpContext);
                 if (!int.TryParse(userId, out int parsedUserId))
                 {
@@ -117,8 +109,8 @@ namespace ChatApp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, _res);
             }
         }
-        [HttpGet("received-add-friend-requests")]
-        public async Task<ActionResult<Respone>> GetReceivedAddFriendRequests()
+        [HttpGet("get-list-add-friend-requests")]
+        public async Task<ActionResult<Respone>> GetListAddFriendRequests()
         {
             string? userId = FunctionHelper.GetUserId(HttpContext);
             if (!int.TryParse(userId, out int parsedUserId))
@@ -150,14 +142,13 @@ namespace ChatApp.Controllers
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-                await _userRepository.SendFriendRequest(parsedUserId, body.FriendId);
+                var requestAddFriend = await _userRepository.SendFriendRequest(parsedUserId, body.FriendId);
                 _res.data = new
                 {
-                    message = "Create request successfully !"
+                    message = "Create request successfully !",
+                    friendShip = requestAddFriend
                 };
                 return Ok(_res);
-
-
             }
             catch (Exception ex)
             {

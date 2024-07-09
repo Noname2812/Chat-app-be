@@ -55,7 +55,19 @@ namespace ChatApp.Controllers
                     };
                     return StatusCode(StatusCodes.Status406NotAcceptable, _res);
                 }
-                User newUser = await _dbContext.Create(new User { Address = user.Address, Email = user.Email, Password = user.Password, Phone = user.Phone, UserName = user.UserName, Name = user.Name, createAt = DateTime.Now, modifiedDate = DateTime.Now, userTypeId = 1 });
+                User newUser = await _dbContext.Create(new User
+                {
+                    IsOnline = false,
+                    Address = user.Address,
+                    Email = user.Email,
+                    Password = user.Password,
+                    Phone = user.Phone,
+                    UserName = user.UserName,
+                    Name = user.Name,
+                    createAt = DateTime.Now,
+                    modifiedDate = DateTime.Now,
+                    userTypeId = 1
+                });
                 _res.data = _mapper.Map<UserDTO>(newUser);
                 return Ok(_res);
             }
