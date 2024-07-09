@@ -10,6 +10,8 @@ using ChatApp.Interfaces;
 using ChatApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using ChatApp.Hubs;
+using ChatApp.Services.ChatServices;
 
 namespace ChatApp.Installers
 {
@@ -22,7 +24,7 @@ namespace ChatApp.Installers
             //add autoMapper
             services.AddAutoMapper(typeof(AutoMapperConfig));
             //DI
-            services.AddSingleton<ChatService>();
+            services.AddScoped<IHubService, HubService>();
             services.AddSingleton<IPhotoService, PhotoService>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserRoomChatRepository, UserRoomChatRepository>();

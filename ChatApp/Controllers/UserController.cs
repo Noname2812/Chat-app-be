@@ -6,6 +6,7 @@ using ChatApp.Models;
 using ChatApp.Models.DTOs;
 using ChatApp.Models.RequestModels;
 using ChatApp.Models.ResponeModels;
+using ChatApp.Services.ChatServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,10 +20,12 @@ namespace ChatApp.Controllers
         private readonly IUserRepository _userRepository;
         private Respone _res;
         private readonly IMapper _mapper;
-        public UserController(IUserRepository userRepository, IMapper mapper)
+        private readonly IHubService _hubServices;
+        public UserController(IUserRepository userRepository, IMapper mapper, IHubService hubService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
+            _hubServices = hubService;
             _res = new();
         }
         [HttpPut]
@@ -143,6 +146,7 @@ namespace ChatApp.Controllers
                     return BadRequest(_res);
                 }
                 var requestAddFriend = await _userRepository.SendFriendRequest(parsedUserId, body.FriendId);
+                await _hubServices.NotifyAddFriendRequest(new FriendShipDTO { UserId = parsedUserId, FriendId = body.FriendId, Status = "Pending" });
                 _res.data = new
                 {
                     message = "Create request successfully !",
@@ -177,6 +181,7 @@ namespace ChatApp.Controllers
                     return BadRequest(_res);
                 }
                 await _userRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Accepted");
+                await _hubServices.NotifyAddFriendRequest(new FriendShipDTO { UserId = body.UserId, FriendId = body.FriendId, Status = "Accepted" });
                 _res.data = new
                 {
                     message = "Accepted request successfully !"
