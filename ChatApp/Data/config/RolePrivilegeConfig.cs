@@ -10,7 +10,6 @@ namespace WebAPI.Data.config
         {
             builder.ToTable("RolePrivileges");
             builder.HasKey(x => x.id);
-            builder.Property(x => x.id).UseIdentityColumn();
             builder.Property(n => n.rolePrivilegeName).HasMaxLength(250);
             builder.Property(n => n.description).HasMaxLength(200);
             builder.Property(n => n.isActive);

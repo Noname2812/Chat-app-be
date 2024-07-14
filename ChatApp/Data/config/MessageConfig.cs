@@ -10,7 +10,6 @@ namespace ChatApp.Data.config
         {
             builder.ToTable("Messages");
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Id).UseIdentityColumn();
             builder.Property(n => n.CreateAt);
             builder.Property(n => n.Content);
             builder.Property(n => n.ImageUrl);

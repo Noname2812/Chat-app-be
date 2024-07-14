@@ -11,7 +11,7 @@ namespace ChatApp.Data.Repository.RoomChats
             _dbContext = db;
         }
 
-        public async Task<RoomChat?> CreateRoomChat(RoomChat roomChat, List<int> listUserId)
+        public async Task<RoomChat?> CreateRoomChat(RoomChat roomChat, List<Guid> listUserId)
         {
             try
             {
@@ -36,23 +36,23 @@ namespace ChatApp.Data.Repository.RoomChats
             }
         }
 
-        public async Task<List<RoomChat>?> GetAllRoomChatByIdUser(string? id)
+        public async Task<List<RoomChat>?> GetAllRoomChatByIdUser(Guid? id)
         {
-            var roomChats = await _dbContext.UserRoomChat.Where(r => r.UserId == int.Parse(id))
+            var roomChats = await _dbContext.UserRoomChat.Where(r => r.UserId == id)
                 .Join(_dbContext.RoomChats, user_roomchat => user_roomchat.RoomChatId, room => room.Id, (userroomchat, room) => room)
                 .OrderByDescending(r => r.ModifiedDate)
                 .Include(r => r.Messages.OrderByDescending(x => x.CreateAt)
                 .Skip(0).Take(10)).ToListAsync();
             return roomChats;
         }
-        public async Task<RoomChat?> GetRoomChatById(int roomId, int offset = 0, int limit = 10)
+        public async Task<RoomChat?> GetRoomChatById(Guid roomId, int offset = 0, int limit = 10)
         {
             var room = await _dbContext.RoomChats.Where(r => r.Id == roomId)
                .Include(r => r.Messages.OrderByDescending(x => x.CreateAt)
                 .Skip(offset).Take(limit)).FirstOrDefaultAsync();
             return room;
         }
-        public async Task<RoomChat?> GetRoomChatPrivateBetweenTwoUser(int? userId1, int? userId2)
+        public async Task<RoomChat?> GetRoomChatPrivateBetweenTwoUser(Guid? userId1, Guid? userId2)
         {
             if (userId1 == null || userId2 == null) { return null; }
             var userRoomResult = await (from urc1 in _dbContext.UserRoomChat

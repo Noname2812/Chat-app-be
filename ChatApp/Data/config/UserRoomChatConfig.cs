@@ -10,7 +10,6 @@ namespace ChatApp.Data.config
         {
             builder.ToTable("UserRoomChats");
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Id).UseIdentityColumn();
             builder.HasIndex(n => new { n.UserId, n.RoomChatId }, "UK_UserRoomChatMapping").IsUnique();
             builder.Property(n => n.UserId).IsRequired();
             builder.Property(n => n.RoomChatId).IsRequired();

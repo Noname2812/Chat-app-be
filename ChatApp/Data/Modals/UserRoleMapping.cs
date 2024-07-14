@@ -2,9 +2,9 @@
 {
     public class UserRoleMapping
     {
-        public int id { get; set; }
-        public int userId { get; set; }
-        public int roleId { get; set; }
+        public Guid id { get; set; }
+        public Guid userId { get; set; }
+        public Guid roleId { get; set; }
         public User user { get; set; }
         public Role role { get; set; }
     }

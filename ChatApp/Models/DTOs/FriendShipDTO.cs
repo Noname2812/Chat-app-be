@@ -2,8 +2,8 @@
 {
     public class FriendShipDTO
     {
-        public int UserId { get; set; }
-        public int FriendId { get; set; }
+        public Guid UserId { get; set; }
+        public Guid FriendId { get; set; }
         public string? Status { get; set;}
     }
 }

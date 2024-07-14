@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChatApp.Migrations
 {
     [DbContext(typeof(ChatAppDBContext))]
-    [Migration("20240703070556_RemoveColumnRefreshTokenInUserTable")]
-    partial class RemoveColumnRefreshTokenInUserTable
+    [Migration("20240714152422_Init-database")]
+    partial class Initdatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,13 +25,13 @@ namespace ChatApp.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ChatApp.Data.Friendship", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.Friendship", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("FriendId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("FriendId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -48,13 +48,11 @@ namespace ChatApp.Migrations
                     b.ToTable("Friends");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.Message", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.Message", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
@@ -65,11 +63,11 @@ namespace ChatApp.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoomChatId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomChatId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -80,13 +78,11 @@ namespace ChatApp.Migrations
                     b.ToTable("Messages", (string)null);
                 });
 
-            modelBuilder.Entity("ChatApp.Data.Role", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.Role", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("createAt")
                         .HasColumnType("datetime2");
@@ -114,13 +110,11 @@ namespace ChatApp.Migrations
                     b.ToTable("Roles", (string)null);
                 });
 
-            modelBuilder.Entity("ChatApp.Data.RolePrivilege", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.RolePrivilege", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("createAt")
                         .HasColumnType("datetime2");
@@ -138,8 +132,8 @@ namespace ChatApp.Migrations
                     b.Property<DateTime>("modifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("roleId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("roleId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("rolePrivilegeName")
                         .IsRequired()
@@ -153,13 +147,11 @@ namespace ChatApp.Migrations
                     b.ToTable("RolePrivileges", (string)null);
                 });
 
-            modelBuilder.Entity("ChatApp.Data.RoomChat", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.RoomChat", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatAt")
                         .HasColumnType("datetime2");
@@ -181,13 +173,11 @@ namespace ChatApp.Migrations
                     b.ToTable("RoomChats", (string)null);
                 });
 
-            modelBuilder.Entity("ChatApp.Data.User", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
                         .HasMaxLength(100)
@@ -199,6 +189,11 @@ namespace ChatApp.Migrations
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool?>("IsOnline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime?>("LastOnline")
                         .HasColumnType("datetime2");
@@ -227,8 +222,8 @@ namespace ChatApp.Migrations
                     b.Property<DateTime?>("modifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("userTypeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("userTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -240,19 +235,38 @@ namespace ChatApp.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("ChatApp.Data.UserRoomChat", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.UserRoleMapping", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<Guid>("roleId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("RoomChatId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("userId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.HasKey("id");
+
+                    b.HasIndex("roleId");
+
+                    b.HasIndex("userId");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("ChatApp.Data.Modals.UserRoomChat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoomChatId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -264,13 +278,11 @@ namespace ChatApp.Migrations
                     b.ToTable("UserRoomChats", (string)null);
                 });
 
-            modelBuilder.Entity("ChatApp.Data.UserType", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.UserType", b =>
                 {
-                    b.Property<int>("id")
+                    b.Property<Guid>("id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("createAt")
                         .HasColumnType("datetime2");
@@ -292,38 +304,15 @@ namespace ChatApp.Migrations
                     b.ToTable("UserTypes", (string)null);
                 });
 
-            modelBuilder.Entity("WebAPI.Data.UserRoleMapping", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.Friendship", b =>
                 {
-                    b.Property<int>("id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id"));
-
-                    b.Property<int>("roleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("roleId");
-
-                    b.HasIndex("userId");
-
-                    b.ToTable("UserRoles");
-                });
-
-            modelBuilder.Entity("ChatApp.Data.Friendship", b =>
-                {
-                    b.HasOne("ChatApp.Data.User", "Friend")
+                    b.HasOne("ChatApp.Data.Modals.User", "Friend")
                         .WithMany("FriendsOf")
                         .HasForeignKey("FriendId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ChatApp.Data.User", "User")
+                    b.HasOne("ChatApp.Data.Modals.User", "User")
                         .WithMany("Friends")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -334,16 +323,16 @@ namespace ChatApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.Message", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.Message", b =>
                 {
-                    b.HasOne("ChatApp.Data.RoomChat", "RoomChat")
+                    b.HasOne("ChatApp.Data.Modals.RoomChat", "RoomChat")
                         .WithMany("Messages")
                         .HasForeignKey("RoomChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Message_RoomChat");
 
-                    b.HasOne("ChatApp.Data.User", "User")
+                    b.HasOne("ChatApp.Data.Modals.User", "User")
                         .WithMany("Messages")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -355,9 +344,9 @@ namespace ChatApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.RolePrivilege", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.RolePrivilege", b =>
                 {
-                    b.HasOne("ChatApp.Data.Role", "role")
+                    b.HasOne("ChatApp.Data.Modals.Role", "role")
                         .WithMany("privileges")
                         .HasForeignKey("roleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -367,9 +356,9 @@ namespace ChatApp.Migrations
                     b.Navigation("role");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.User", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.User", b =>
                 {
-                    b.HasOne("ChatApp.Data.UserType", "UserType")
+                    b.HasOne("ChatApp.Data.Modals.UserType", "UserType")
                         .WithMany("Users")
                         .HasForeignKey("userTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -379,16 +368,35 @@ namespace ChatApp.Migrations
                     b.Navigation("UserType");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.UserRoomChat", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.UserRoleMapping", b =>
                 {
-                    b.HasOne("ChatApp.Data.RoomChat", "RoomChat")
+                    b.HasOne("ChatApp.Data.Modals.Role", "role")
+                        .WithMany("UserRoleMappings")
+                        .HasForeignKey("roleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ChatApp.Data.Modals.User", "user")
+                        .WithMany("UserRoleMappings")
+                        .HasForeignKey("userId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("role");
+
+                    b.Navigation("user");
+                });
+
+            modelBuilder.Entity("ChatApp.Data.Modals.UserRoomChat", b =>
+                {
+                    b.HasOne("ChatApp.Data.Modals.RoomChat", "RoomChat")
                         .WithMany("UserRoomChat")
                         .HasForeignKey("RoomChatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_UserRoomChatMapping_RoomChat");
 
-                    b.HasOne("ChatApp.Data.User", "User")
+                    b.HasOne("ChatApp.Data.Modals.User", "User")
                         .WithMany("UserRoomChat")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -400,40 +408,21 @@ namespace ChatApp.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WebAPI.Data.UserRoleMapping", b =>
-                {
-                    b.HasOne("ChatApp.Data.Role", "role")
-                        .WithMany("UserRoleMappings")
-                        .HasForeignKey("roleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ChatApp.Data.User", "user")
-                        .WithMany("UserRoleMappings")
-                        .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("role");
-
-                    b.Navigation("user");
-                });
-
-            modelBuilder.Entity("ChatApp.Data.Role", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.Role", b =>
                 {
                     b.Navigation("UserRoleMappings");
 
                     b.Navigation("privileges");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.RoomChat", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.RoomChat", b =>
                 {
                     b.Navigation("Messages");
 
                     b.Navigation("UserRoomChat");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.User", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.User", b =>
                 {
                     b.Navigation("Friends");
 
@@ -446,7 +435,7 @@ namespace ChatApp.Migrations
                     b.Navigation("UserRoomChat");
                 });
 
-            modelBuilder.Entity("ChatApp.Data.UserType", b =>
+            modelBuilder.Entity("ChatApp.Data.Modals.UserType", b =>
                 {
                     b.Navigation("Users");
                 });

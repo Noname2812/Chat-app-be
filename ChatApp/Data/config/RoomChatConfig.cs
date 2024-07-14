@@ -10,7 +10,6 @@ namespace ChatApp.Data.config
         {
             builder.ToTable("RoomChats");
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Id).UseIdentityColumn();
             builder.Property(n => n.Name).IsRequired();
             builder.Property(n => n.IsPrivate).HasDefaultValue(true);
             builder.Property(n => n.CreatAt);

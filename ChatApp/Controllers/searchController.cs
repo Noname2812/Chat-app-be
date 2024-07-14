@@ -32,7 +32,7 @@ namespace ChatApp.Controllers
             try
             {
                 var userId = FunctionHelper.GetUserId(HttpContext);
-                var users = await _unitOfWork.UserRepository.SearchUserByQuery(value, int.Parse(userId));
+                var users = await _unitOfWork.UserRepository.SearchUserByQuery(value, Guid.Parse(userId));
                 _res.data = users;
                 return Ok(_res);
             }

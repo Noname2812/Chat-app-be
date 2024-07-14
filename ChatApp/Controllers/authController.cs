@@ -66,7 +66,7 @@ namespace ChatApp.Controllers
                     Name = user.Name,
                     createAt = DateTime.Now,
                     modifiedDate = DateTime.Now,
-                    userTypeId = 1
+                    userTypeId = Guid.Parse("2a556d20-2375-4d66-8729-54d328099099")
                 });
                 _res.data = _mapper.Map<UserDTO>(newUser);
                 return Ok(_res);
@@ -137,7 +137,7 @@ namespace ChatApp.Controllers
                     UserName = body.Email,
                     Password = body.Email,
                     Address = "Google",
-                    userTypeId = 4,
+                    userTypeId = Guid.Parse("2a556d20-2375-4d66-8729-54d328099099"),
                     Phone = ""
                 };
                 var user = await _unitOfWork.UserRepository.Create(newUser);
@@ -184,7 +184,7 @@ namespace ChatApp.Controllers
                 }
 
                 string userId = userIdClaim.Value;
-                if (!int.TryParse(userId, out int parsedUserId))
+                if (!Guid.TryParse(userId, out Guid parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
@@ -208,7 +208,6 @@ namespace ChatApp.Controllers
                 }
                 var newAccessToken = FunctionHelper.GenarateToken(_configuration, user.Id);
                 var newRefreshToken = FunctionHelper.GenerateRefreshToken();
-                
                 await _cacheService.SetData($"black-list-token:{jwtToken}", jwtToken, TimeSpan.FromSeconds(600));
                 await _cacheService.SetData($"refreshToken:{parsedUserId}", newRefreshToken, TimeSpan.FromDays(10));
                 _res.data = new
@@ -242,7 +241,7 @@ namespace ChatApp.Controllers
                 }
                 string userId = userIdClaim.Value;
                 // update database
-                await _unitOfWork.UserRepository.UpdateStatusOnline(int.Parse(userId), false);
+                await _unitOfWork.UserRepository.UpdateStatusOnline(Guid.Parse(userId), false);
                 // add token into blackList cache
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));

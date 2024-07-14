@@ -65,7 +65,7 @@ namespace ChatApp.Services.ChatServices
                 }
             }
         }
-        public async Task NotifyFriendsOnline(int id)
+        public async Task NotifyFriendsOnline(Guid id)
         {
 
             var cachedUserOnline = await _cacheService.GetDataByEndpoint<UserConnection>("list-users-online");

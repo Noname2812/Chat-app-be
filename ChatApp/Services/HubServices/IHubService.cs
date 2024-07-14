@@ -7,6 +7,6 @@ namespace ChatApp.Services.ChatServices
     {
         Task SendMessage(MessageRequest req);
         Task NotifyAddFriendRequest(FriendShipDTO friendShip);
-        Task NotifyFriendsOnline(int id);
+        Task NotifyFriendsOnline(Guid id);
     }
 }

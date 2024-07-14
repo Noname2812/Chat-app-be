@@ -33,7 +33,7 @@ namespace ChatApp.Controllers
             try
             {
                 string? userId = FunctionHelper.GetUserId(HttpContext);
-                if (!int.TryParse(userId, out int parsedUserId))
+                if (!Guid.TryParse(userId, out Guid parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
@@ -78,7 +78,7 @@ namespace ChatApp.Controllers
                     return Unauthorized(_res);
                 }
                 string userId = userIdClaim.Value;
-                if (!int.TryParse(userId, out int parsedUserId))
+                if (!Guid.TryParse(userId, out Guid parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
@@ -114,7 +114,7 @@ namespace ChatApp.Controllers
         public async Task<ActionResult<Respone>> GetListAddFriendRequests()
         {
             string? userId = FunctionHelper.GetUserId(HttpContext);
-            if (!int.TryParse(userId, out int parsedUserId))
+            if (!Guid.TryParse(userId, out Guid parsedUserId))
             {
                 _res.errors = "Invalid user ID!";
                 return BadRequest(_res);
@@ -138,7 +138,7 @@ namespace ChatApp.Controllers
             try
             {
                 string? userId = FunctionHelper.GetUserId(HttpContext);
-                if (!int.TryParse(userId, out int parsedUserId))
+                if (!Guid.TryParse(userId, out Guid parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
@@ -207,7 +207,7 @@ namespace ChatApp.Controllers
             try
             {
                 string? userId = FunctionHelper.GetUserId(HttpContext);
-                if (!int.TryParse(userId, out int parsedUserId))
+                if (!Guid.TryParse(userId, out Guid parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);

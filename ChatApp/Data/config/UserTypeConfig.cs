@@ -10,7 +10,6 @@ namespace WebAPI.Data.config
         {
             builder.ToTable("UserTypes");
             builder.HasKey(x => x.id);
-            builder.Property(x => x.id).UseIdentityColumn();
             builder.Property(n => n.name).IsRequired().HasMaxLength(250);
             builder.Property(n => n.description).HasMaxLength(200);
             builder.Property(n => n.createAt);

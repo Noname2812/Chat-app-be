@@ -23,7 +23,7 @@ namespace ChatApp.Models
             }
             return null;
         }
-        public static string? GenarateToken(IConfiguration configuration, int id)
+        public static string? GenarateToken(IConfiguration configuration, Guid id)
         {
             var key = Encoding.ASCII.GetBytes(configuration.GetValue<string>("JWTSecret"));
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -53,8 +53,12 @@ namespace ChatApp.Models
             }
             return result.ToString();
         }
-        public static async Task<string> GetNameRoomByTwoIds(int id1, int id2, IUserRepository _userRepository)
+        public static async Task<string?> GetNameRoomByTwoIds(Guid? id1, Guid? id2, IUserRepository _userRepository)
         {
+            if(id1 == null || id2 == null)
+            {
+                return null;
+            }
             var fromUser = await _userRepository.GetItemByQuery(x => x.Id == id1);
             var toUser = await _userRepository.GetItemByQuery(x => x.Id == id2);
             var stringCompare = string.CompareOrdinal(fromUser?.Name, toUser?.Name) < 0;

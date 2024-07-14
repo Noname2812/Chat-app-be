@@ -10,7 +10,6 @@ namespace WebAPI.Data.config
         {
             builder.ToTable("UserRoleMappings");
             builder.HasKey(x => x.id);
-            builder.Property(x => x.id).UseIdentityColumn();
             builder.HasIndex(n => new { n.userId, n.roleId }, "UK_UserRoleMapping").IsUnique();
             builder.Property(n => n.userId).IsRequired();
             builder.Property(n => n.roleId).IsRequired();

@@ -2,10 +2,10 @@
 {
     public class RolePrivilege
     {
-        public int id { get; set; }
+        public Guid id { get; set; }
         public string rolePrivilegeName { get; set; }
         public string? description { get; set; }
-        public int roleId { get; set; }
+        public Guid roleId { get; set; }
         public bool isActive { get; set; }
         public bool isDeleted { get; set; }
         public DateTime createAt { get; set; }

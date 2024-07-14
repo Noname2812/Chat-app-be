@@ -4,11 +4,11 @@ namespace ChatApp.Models.DTOs
 {
     public class MessageDTO
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string? Content { get; set; }
         public string? ImageUrl { get; set; }
         public DateTime CreateAt { get; set; }
-        public int UserId { get; set; }
-        public int RoomChatId { get; set; }
+        public Guid UserId { get; set; }
+        public Guid RoomChatId { get; set; }
     }
 }

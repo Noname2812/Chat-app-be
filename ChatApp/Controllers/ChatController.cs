@@ -19,7 +19,7 @@ namespace ChatApp.Controllers
         private readonly IHubService _chatService;
         private readonly IMapper _mapper;
         private readonly Respone _res;
-        public ChatController(IUnitOfWork unitOfWork,IMapper mapper, IHubService chatService, Respone res)
+        public ChatController(IUnitOfWork unitOfWork, IMapper mapper, IHubService chatService, Respone res)
         {
             _unitOfWork = unitOfWork;
             _chatService = chatService;
@@ -36,33 +36,29 @@ namespace ChatApp.Controllers
                 _res.errors = "User ID claim is missing!";
                 return Unauthorized(_res);
             }
-            string userId = userIdClaim.Value;
-            if (!int.TryParse(userId, out int parsedUserId))
-            {
-                _res.errors = "Invalid user ID!";
-                return BadRequest(_res);
-            }
             try
             {
-                if (req.RoomId < 0)
+                var userId = Guid.Parse(userIdClaim.Value);
+                if (req.RoomId is null)
                 {
                     if (req.isPrivate && req.to is not null)
                     {
                         // create room
-                        List<int> arrUserId = new List<int>() { req.to ?? -1, Convert.ToInt32(userId) };
-                        var name = await FunctionHelper.GetNameRoomByTwoIds(req.to ?? -1, parsedUserId, _unitOfWork.UserRepository);
-                        RoomChat? newRoomChat = await _unitOfWork.RoomChatRepository.CreateRoomChat(
-                            new RoomChat { CreatAt = DateTime.Now, ModifiedDate = DateTime.Now, IsPrivate = true, Name = name ?? "Default" }, arrUserId);
-                        List<Message> msgs = [new Message { Content = req.Message, CreateAt = DateTime.Now, RoomChatId = newRoomChat.Id, UserId = parsedUserId }];
+                        List<Guid> arrUserId = new List<Guid>() { req.to ?? Guid.NewGuid(), userId };
+                        var name = await FunctionHelper.GetNameRoomByTwoIds(req.to, userId, _unitOfWork.UserRepository);
+                        RoomChat newRoomChat = await _unitOfWork.RoomChatRepository.CreateRoomChat(
+                            new RoomChat { Id = Guid.NewGuid(), CreatAt = DateTime.Now, ModifiedDate = DateTime.Now, IsPrivate = true, Name = name ?? "Default" },
+                            arrUserId);
+                        List<Message> msgs = [new Message { Id = Guid.NewGuid(), Content = req.Message, CreateAt = DateTime.Now, RoomChatId = newRoomChat.Id, UserId = userId }];
                         if (req.Images is not null)
                         {
                             foreach (var img in req.Images)
                             {
-                                msgs.Add(new Message { CreateAt = DateTime.Now, RoomChatId = newRoomChat.Id, UserId = Convert.ToInt32(userId), ImageUrl = img });
+                                msgs.Add(new Message { Id = Guid.NewGuid(), CreateAt = DateTime.Now, RoomChatId = newRoomChat.Id, UserId = userId, ImageUrl = img });
                             }
                         }
                         await _unitOfWork.MessageRespository.AddListData(msgs);
-                        await _chatService.SendMessage(new MessageRequest { from = parsedUserId, RoomId = newRoomChat.Id });
+                        await _chatService.SendMessage(new MessageRequest { from = userId, RoomId = newRoomChat.Id });
                         _res.data = new { messages = _mapper.Map<List<MessageDTO>>(msgs), roomId = newRoomChat.Id };
                         return Ok(_res);
                     }
@@ -79,16 +75,16 @@ namespace ChatApp.Controllers
                     return NotFound(_res);
                 }
                 // insert message into database
-                List<Message> messages = [new Message { Content = req.Message, CreateAt = DateTime.Now, RoomChatId = room.Id, UserId = parsedUserId }];
+                List<Message> messages = [new Message { Content = req.Message, CreateAt = DateTime.Now, RoomChatId = room.Id, UserId = userId }];
                 if (req.Images is not null)
                 {
                     foreach (var img in req.Images)
                     {
-                        messages.Add(new Message { CreateAt = DateTime.Now, RoomChatId = room.Id, UserId = parsedUserId, ImageUrl = img });
+                        messages.Add(new Message { CreateAt = DateTime.Now, RoomChatId = room.Id, UserId = userId, ImageUrl = img });
                     }
                 }
                 await _unitOfWork.MessageRespository.AddListData(messages);
-                await _chatService.SendMessage(new MessageRequest { from = parsedUserId, RoomId = room.Id });
+                await _chatService.SendMessage(new MessageRequest { from = userId, RoomId = room.Id });
                 var messagesRes = _mapper.Map<List<MessageDTO>>(messages);
                 _res.data = new { messages = messagesRes, roomId = room.Id };
                 return Ok(_res);
@@ -99,5 +95,7 @@ namespace ChatApp.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, _res);
             }
         }
+
     }
 }
+

@@ -11,7 +11,7 @@ namespace ChatApp.Data.Repository.Users
         {
             _dbContext = db;
         }
-        public async Task<ICollection<User>?> GetFriendsById(int userId)
+        public async Task<ICollection<User>?> GetFriendsById(Guid userId)
         {
             var user = await _dbContext.Users
             .Include(u => u.Friends.Where(x => x.Status == "Accepted"))
@@ -30,7 +30,7 @@ namespace ChatApp.Data.Repository.Users
             return null;
         }
 
-        public async Task<ICollection<User>?> GetReceivedFriendRequests(int id)
+        public async Task<ICollection<User>?> GetReceivedFriendRequests(Guid id)
         {
             var user = await _dbContext.Users
            .Include(u => u.FriendsOf)
@@ -43,7 +43,7 @@ namespace ChatApp.Data.Repository.Users
             return receivedRequests;
         }
 
-        public async Task<List<SearchUserResult>> SearchUserByQuery(string query, int id, int offset = 0, int limit = 10)
+        public async Task<List<SearchUserResult>> SearchUserByQuery(string query, Guid id, int offset = 0, int limit = 10)
         {
 
             var users = await _dbContext.Users.Where(x => (x.Name.ToLower().IndexOf(query.ToLower()) > -1
@@ -51,7 +51,7 @@ namespace ChatApp.Data.Repository.Users
             return users.Select(x => new SearchUserResult { Avatar = x.Avatar, Id = x.Id, Name = x.Name, FriendShip = getStatusFriend(id, x.Id) }).ToList();
         }
 
-        public async Task<Friendship?> SendFriendRequest(int from, int to)
+        public async Task<Friendship?> SendFriendRequest(Guid from, Guid to)
         {
             var request = await _dbContext.Friends.Where(x => x.UserId == from && x.FriendId == to).FirstOrDefaultAsync();
             if (request == null)
@@ -64,7 +64,7 @@ namespace ChatApp.Data.Repository.Users
             return null;
         }
 
-        public async Task UpdateFriendRequest(int from, int to, string status)
+        public async Task UpdateFriendRequest(Guid from, Guid to, string status)
         {
             var request = await _dbContext.Friends.Where(x => (x.UserId == from && x.FriendId == to) || (x.UserId == to && x.FriendId == from)).FirstOrDefaultAsync();
             if (request != null)
@@ -74,7 +74,7 @@ namespace ChatApp.Data.Repository.Users
             }
         }
 
-        public async Task UpdateStatusOnline(int userId, bool status)
+        public async Task UpdateStatusOnline(Guid userId, bool status)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
             if (user != null)
@@ -88,7 +88,7 @@ namespace ChatApp.Data.Repository.Users
             }
 
         }
-        private FriendShipDTO? getStatusFriend(int id, int friendId)
+        private FriendShipDTO? getStatusFriend(Guid id, Guid friendId)
         {
             var requestAddFriend = _dbContext.Friends.Where(x => (x.UserId == id && x.FriendId == friendId) || (x.UserId == friendId && x.FriendId == id)).FirstOrDefault();
             if (requestAddFriend != null)
