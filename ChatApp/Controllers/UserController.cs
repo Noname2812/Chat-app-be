@@ -54,8 +54,9 @@ namespace ChatApp.Controllers
                 userExist.Phone = user.Phone ?? userExist.Phone;
                 userExist.Avatar = user.Avatar ?? userExist.Avatar;
                 userExist.Address = user.Address ?? userExist.Address;
-                var userUdpdate = await _unitOfWork.UserRepository.Update(userExist);
-                _res.data = new { message = "Update successfully !", user = _mapper.Map<UserDTO>(userUdpdate) };
+                _unitOfWork.UserRepository.Update(userExist);
+                await _unitOfWork.SaveChanges();
+                _res.data = new { message = "Update successfully !", user = _mapper.Map<UserDTO>(userExist) };
                 return Ok(_res);
             }
             catch (Exception ex)
@@ -100,7 +101,8 @@ namespace ChatApp.Controllers
                     return BadRequest(_res);
                 }
                 userExist.Password = user.newPassword ?? userExist.Password;
-                await _unitOfWork.UserRepository.Update(userExist);
+                _unitOfWork.UserRepository.Update(userExist);
+                await _unitOfWork.SaveChanges();
                 _res.data = new { message = "Change password successfully !" };
                 return Ok(_res);
             }
@@ -150,6 +152,7 @@ namespace ChatApp.Controllers
                     message = "Create request successfully !",
                     friendShip = requestAddFriend
                 };
+                await _unitOfWork.SaveChanges();
                 return Ok(_res);
             }
             catch (Exception ex)
@@ -173,12 +176,13 @@ namespace ChatApp.Controllers
             try
             {
                 string? userId = FunctionHelper.GetUserId(HttpContext);
-                if (!int.TryParse(userId, out int parsedUserId))
+                if (!Guid.TryParse(userId, out Guid parsedUserId))
                 {
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-                await _unitOfWork.UserRepository.UpdateFriendRequest(body.UserId , body.FriendId, "Accepted");
+                await _unitOfWork.UserRepository.UpdateFriendRequest(body.UserId, body.FriendId, "Accepted");
+                await _unitOfWork.SaveChanges();
                 await _hubServices.NotifyAddFriendRequest(new FriendShipDTO { UserId = body.UserId, FriendId = body.FriendId, Status = "Accepted" });
                 _res.data = new
                 {
@@ -213,6 +217,7 @@ namespace ChatApp.Controllers
                     return BadRequest(_res);
                 }
                 await _unitOfWork.UserRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Rejected");
+                await _unitOfWork.SaveChanges();
                 _res.data = new
                 {
                     message = "Rejected request successfully !"

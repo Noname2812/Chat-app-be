@@ -57,8 +57,10 @@ namespace ChatApp.Controllers
                                 msgs.Add(new Message { Id = Guid.NewGuid(), CreateAt = DateTime.Now, RoomChatId = newRoomChat.Id, UserId = userId, ImageUrl = img });
                             }
                         }
-                        await _unitOfWork.MessageRespository.AddListData(msgs);
+                        _unitOfWork.MessageRespository.AddListData(msgs);
+                        await _unitOfWork.SaveChanges();
                         await _chatService.SendMessage(new MessageRequest { from = userId, RoomId = newRoomChat.Id });
+
                         _res.data = new { messages = _mapper.Map<List<MessageDTO>>(msgs), roomId = newRoomChat.Id };
                         return Ok(_res);
                     }
@@ -83,7 +85,8 @@ namespace ChatApp.Controllers
                         messages.Add(new Message { CreateAt = DateTime.Now, RoomChatId = room.Id, UserId = userId, ImageUrl = img });
                     }
                 }
-                await _unitOfWork.MessageRespository.AddListData(messages);
+                _unitOfWork.MessageRespository.AddListData(messages);
+                await _unitOfWork.SaveChanges();
                 await _chatService.SendMessage(new MessageRequest { from = userId, RoomId = room.Id });
                 var messagesRes = _mapper.Map<List<MessageDTO>>(messages);
                 _res.data = new { messages = messagesRes, roomId = room.Id };

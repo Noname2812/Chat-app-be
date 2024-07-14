@@ -19,13 +19,12 @@ namespace ChatApp.Data.Repository.Users
             .Include(u => u.FriendsOf.Where(x => x.Status == "Accepted"))
                 .ThenInclude(f => f.User)
             .FirstOrDefaultAsync(u => u.Id == userId);
-            if(user != null)
+            if (user != null)
             {
                 var friends = user.Friends.Select(f => f.Friend)
               .Union(user.FriendsOf.Select(f => f.User))
               .ToList();
                 return friends;
-
             }
             return null;
         }
@@ -36,11 +35,15 @@ namespace ChatApp.Data.Repository.Users
            .Include(u => u.FriendsOf)
                .ThenInclude(f => f.User)
            .FirstOrDefaultAsync(u => u.Id == id);
-            var receivedRequests = user.FriendsOf
-               .Where(f => f.Status == "Pending")
-               .Select(f => f.User)
-               .ToList();
-            return receivedRequests;
+            if (user != null)
+            {
+                var receivedRequests = user.FriendsOf
+                   .Where(f => f.Status == "Pending")
+                   .Select(f => f.User)
+                   .ToList();
+                return receivedRequests;
+            }
+            return [];
         }
 
         public async Task<List<SearchUserResult>> SearchUserByQuery(string query, Guid id, int offset = 0, int limit = 10)
@@ -70,13 +73,12 @@ namespace ChatApp.Data.Repository.Users
             if (request != null)
             {
                 request.Status = status;
-                await _dbContext.SaveChangesAsync();
             }
         }
 
         public async Task UpdateStatusOnline(Guid userId, bool status)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var user = await GetItemByQuery(x => x.Id == userId);
             if (user != null)
             {
                 user.IsOnline = status;
@@ -84,7 +86,6 @@ namespace ChatApp.Data.Repository.Users
                 {
                     user.LastOnline = DateTime.Now;
                 }
-                await _dbContext.SaveChangesAsync();
             }
 
         }
@@ -96,7 +97,6 @@ namespace ChatApp.Data.Repository.Users
                 return new FriendShipDTO { FriendId = requestAddFriend.FriendId, Status = requestAddFriend.Status, UserId = requestAddFriend.UserId };
             }
             return null;
-
         }
     }
 }

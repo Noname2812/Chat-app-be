@@ -11,29 +11,14 @@ namespace ChatApp.Data.Repository.RoomChats
             _dbContext = db;
         }
 
-        public async Task<RoomChat?> CreateRoomChat(RoomChat roomChat, List<Guid> listUserId)
+        public async Task<RoomChat> CreateRoomChat(RoomChat roomChat, List<Guid> listUserId)
         {
-            try
+            var newRoom = Create(roomChat);
+            foreach (var userId in listUserId)
             {
-                _dbContext.Database.BeginTransaction();
-                var newRoom = await Create(roomChat);
-                foreach (var userId in listUserId)
-                {
-                    var rs = await _dbContext.UserRoomChat.AddAsync(new UserRoomChat { RoomChatId = newRoom.Id, UserId = userId });
-                    if (rs is null)
-                    {
-                        _dbContext.Database.RollbackTransaction();
-                    }
-                }
-                await _dbContext.SaveChangesAsync();
-                _dbContext.Database.CommitTransaction();
-                return newRoom;
+                await _dbContext.UserRoomChat.AddAsync(new UserRoomChat { RoomChatId = newRoom.Id, UserId = userId });
             }
-            catch (Exception ex)
-            {
-                _dbContext.Database.RollbackTransaction();
-                throw new Exception("An error occurred while creating the RoomChat.", ex);
-            }
+            return newRoom;
         }
 
         public async Task<List<RoomChat>?> GetAllRoomChatByIdUser(Guid? id)
@@ -56,13 +41,13 @@ namespace ChatApp.Data.Repository.RoomChats
         {
             if (userId1 == null || userId2 == null) { return null; }
             var userRoomResult = await (from urc1 in _dbContext.UserRoomChat
-                                    join urc2 in _dbContext.UserRoomChat
-                                    on urc1.RoomChatId equals urc2.RoomChatId
-                                    where urc1.UserId == userId1 && urc2.UserId == userId2
-                                    select urc1).FirstOrDefaultAsync();
+                                        join urc2 in _dbContext.UserRoomChat
+                                        on urc1.RoomChatId equals urc2.RoomChatId
+                                        where urc1.UserId == userId1 && urc2.UserId == userId2
+                                        select urc1).FirstOrDefaultAsync();
             if (userRoomResult is not null)
             {
-                return await _dbContext.RoomChats.Where(x => x.Id == userRoomResult.RoomChatId).FirstOrDefaultAsync();
+                return await GetItemByQuery(x => x.Id == userRoomResult.RoomChatId);
             }
             return null;
         }

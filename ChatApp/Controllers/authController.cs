@@ -16,7 +16,7 @@ namespace ChatApp.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class authController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly Respone _res;
         private readonly IConfiguration _configuration;
@@ -24,7 +24,7 @@ namespace ChatApp.Controllers
         private readonly IMapper _mapper;
         private readonly ICacheService _cacheService;
 
-        public authController(IConfiguration configuration, IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService, Respone respone)
+        public AuthController(IConfiguration configuration, IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService, Respone respone)
         {
             _res = respone;
             _configuration = configuration;
@@ -55,7 +55,7 @@ namespace ChatApp.Controllers
                     };
                     return StatusCode(StatusCodes.Status406NotAcceptable, _res);
                 }
-                User newUser = await _unitOfWork.UserRepository.Create(new User
+                User newUser = _unitOfWork.UserRepository.Create(new User
                 {
                     IsOnline = false,
                     Address = user.Address,
@@ -68,6 +68,7 @@ namespace ChatApp.Controllers
                     modifiedDate = DateTime.Now,
                     userTypeId = Guid.Parse("2a556d20-2375-4d66-8729-54d328099099")
                 });
+                await _unitOfWork.SaveChanges();
                 _res.data = _mapper.Map<UserDTO>(newUser);
                 return Ok(_res);
             }
@@ -107,6 +108,7 @@ namespace ChatApp.Controllers
                 await _cacheService.SetData($"refreshToken:{userExists.Id}", refreshToken, TimeSpan.FromDays(10));
                 // update database
                 await _unitOfWork.UserRepository.UpdateStatusOnline(userExists.Id, true);
+                await _unitOfWork.SaveChanges();
                 _res.data = new { message = "Login successfully !", user = _mapper.Map<UserDTO>(userExists), token = tokenGenarated, refreshToken };
                 return Ok(_res);
             }
@@ -140,9 +142,11 @@ namespace ChatApp.Controllers
                     userTypeId = Guid.Parse("2a556d20-2375-4d66-8729-54d328099099"),
                     Phone = ""
                 };
-                var user = await _unitOfWork.UserRepository.Create(newUser);
+                var user =  _unitOfWork.UserRepository.Create(newUser);
                 var token = FunctionHelper.GenarateToken(_configuration, user.Id);
+                await _unitOfWork.SaveChanges();
                 _res.data = new { message = "Login successfully !", user, token, refreshToken };
+
                 return Ok(_res);
             }
             var tokenGenarated = FunctionHelper.GenarateToken(_configuration, isExists.Id);
@@ -247,6 +251,7 @@ namespace ChatApp.Controllers
                 await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));
                 // remove refresh token
                 await _cacheService.RemoveDataByKey($"refreshToken:{userId}");
+                await _unitOfWork.SaveChanges();
                 return Ok(new { message = "Logout successful" });
             }
             catch (Exception ex)

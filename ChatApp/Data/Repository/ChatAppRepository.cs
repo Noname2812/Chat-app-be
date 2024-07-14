@@ -15,18 +15,15 @@ namespace ChatApp.Data.Repository
             _dbContext = db;
             _dbSet = _dbContext.Set<T>();
         }
-        public async Task<T> Create(T record)
+        public T Create(T record)
         {
             _dbSet.Add(record);
-            await _dbContext.SaveChangesAsync();
             return record;
         }
 
-        public async Task<T> Delete(T record)
+        public void Delete(T record)
         {
             _dbSet.Remove(record);
-            await _dbContext.SaveChangesAsync();
-            return record;
         }
 
         public async Task<List<T>?> GetAll()
@@ -55,12 +52,10 @@ namespace ChatApp.Data.Repository
             return await _dbSet.Where(filter).Skip(offset).Take(limit).ToListAsync();
         }
 
-        public async Task<T> Update(T record)
+        public void Update(T record)
         {
             _dbSet.Attach(record);
             _dbContext.Entry(record).State = EntityState.Modified;
-            await _dbContext.SaveChangesAsync();
-            return record;
         }
         public async Task<List<T>?> ExecuteSql(string query)
         {
@@ -69,12 +64,11 @@ namespace ChatApp.Data.Repository
             return result;
         }
 
-        public async Task AddListData(List<T> list)
+        public void AddListData(List<T> list)
         {
             try
             {
                 _dbSet.AddRange(list);
-                await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex)
             {
