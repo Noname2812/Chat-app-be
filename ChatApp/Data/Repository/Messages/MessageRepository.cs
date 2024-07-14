@@ -1,4 +1,6 @@
-﻿namespace ChatApp.Data.Repository.Messages
+﻿using ChatApp.Data.Modals;
+
+namespace ChatApp.Data.Repository.Messages
 {
     public class MessageRepository : ChatAppRepository<Message>, IMessageRespository
     {

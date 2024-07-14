@@ -1,8 +1,7 @@
 ﻿using ChatApp.Data.config;
 using Microsoft.EntityFrameworkCore;
-using WebAPI.Data;
 using WebAPI.Data.config;
-namespace ChatApp.Data
+namespace ChatApp.Data.Modals
 {
     public class ChatAppDBContext : DbContext
     {

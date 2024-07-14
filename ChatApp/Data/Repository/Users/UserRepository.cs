@@ -1,4 +1,5 @@
-﻿using ChatApp.Models.DTOs;
+﻿using ChatApp.Data.Modals;
+using ChatApp.Models.DTOs;
 using ChatApp.Models.ResponeModels;
 using Microsoft.EntityFrameworkCore;
 namespace ChatApp.Data.Repository.Users
@@ -18,10 +19,15 @@ namespace ChatApp.Data.Repository.Users
             .Include(u => u.FriendsOf.Where(x => x.Status == "Accepted"))
                 .ThenInclude(f => f.User)
             .FirstOrDefaultAsync(u => u.Id == userId);
-            var friends = user.Friends.Select(f => f.Friend)
-                .Union(user.FriendsOf.Select(f => f.User))
-                .ToList();
-            return friends;
+            if(user != null)
+            {
+                var friends = user.Friends.Select(f => f.Friend)
+              .Union(user.FriendsOf.Select(f => f.User))
+              .ToList();
+                return friends;
+
+            }
+            return null;
         }
 
         public async Task<ICollection<User>?> GetReceivedFriendRequests(int id)

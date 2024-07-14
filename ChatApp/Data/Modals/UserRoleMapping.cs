@@ -1,6 +1,4 @@
-﻿using ChatApp.Data;
-
-namespace WebAPI.Data
+﻿namespace ChatApp.Data.Modals
 {
     public class UserRoleMapping
     {

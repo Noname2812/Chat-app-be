@@ -1,17 +1,13 @@
 ﻿
 using ChatApp.Configurations;
-using ChatApp.Data;
-using ChatApp.Data.Repository.Messages;
-using ChatApp.Data.Repository.RoomChats;
-using ChatApp.Data.Repository.UserRoomChats;
-using ChatApp.Data.Repository.Users;
-using ChatApp.Data.Repository;
 using ChatApp.Interfaces;
 using ChatApp.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using ChatApp.Hubs;
 using ChatApp.Services.ChatServices;
+using ChatApp.Data.Modals;
+using ChatApp.Data.UnitOfWork;
+using ChatApp.Models.ResponeModels;
 
 namespace ChatApp.Installers
 {
@@ -25,12 +21,9 @@ namespace ChatApp.Installers
             services.AddAutoMapper(typeof(AutoMapperConfig));
             //DI
             services.AddScoped<IHubService, HubService>();
+            services.AddScoped<Respone>();
             services.AddSingleton<IPhotoService, PhotoService>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IUserRoomChatRepository, UserRoomChatRepository>();
-            services.AddScoped<IRoomChatRepository, RoomChatRepository>();
-            services.AddScoped<IMessageRespository, MessageRepository>();
-            services.AddScoped(typeof(IChatAppRepository<>), typeof(ChatAppRepository<>));
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             // connect database
             services.AddDbContext<ChatAppDBContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("ChatAppDBConnection")));

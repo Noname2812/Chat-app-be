@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
+using ChatApp.Data.Modals;
 
 namespace ChatApp.Data.config
 {

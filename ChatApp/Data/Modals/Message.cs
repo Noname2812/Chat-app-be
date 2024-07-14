@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ChatApp.Data
+namespace ChatApp.Data.Modals
 {
     public class Message
     {

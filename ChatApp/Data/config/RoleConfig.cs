@@ -1,4 +1,4 @@
-﻿using ChatApp.Data;
+﻿using ChatApp.Data.Modals;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,4 +1,4 @@
-﻿namespace ChatApp.Data
+﻿namespace ChatApp.Data.Modals
 {
     public class UserType
     {

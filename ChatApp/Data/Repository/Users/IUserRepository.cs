@@ -1,4 +1,5 @@
-﻿using ChatApp.Models.ResponeModels;
+﻿using ChatApp.Data.Modals;
+using ChatApp.Models.ResponeModels;
 
 namespace ChatApp.Data.Repository.Users
 {

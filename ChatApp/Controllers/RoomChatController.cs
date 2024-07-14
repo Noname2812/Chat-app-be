@@ -1,7 +1,6 @@
 ﻿
 using AutoMapper;
-using ChatApp.Data.Repository.Messages;
-using ChatApp.Data.Repository.RoomChats;
+using ChatApp.Data.UnitOfWork;
 using ChatApp.Models.DTOs;
 using ChatApp.Models.Query;
 using ChatApp.Models.ResponeModels;
@@ -16,16 +15,14 @@ namespace ChatApp.Controllers
     [Authorize(Roles = "User,Admin")]
     public class RoomChatController : ControllerBase
     {
-        private Respone _res;
-        private readonly IRoomChatRepository _roomChatRepository;
+        private readonly Respone _res;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IMessageRespository _messageRespository;
-        public RoomChatController(IRoomChatRepository roomChatRepository, IMessageRespository messageRespository, IMapper mapper)
+        public RoomChatController(IUnitOfWork unitOfWork, IMapper mapper, Respone respone)
         {
-            _res = new();
-            _roomChatRepository = roomChatRepository;
+            _res = respone;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _messageRespository = messageRespository;
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -34,7 +31,7 @@ namespace ChatApp.Controllers
         {
             var claimsPrincipal = HttpContext.User;
             string? userId = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId")?.Value;
-            var rooms = await _roomChatRepository.GetAllRoomChatByIdUser(userId);
+            var rooms = await _unitOfWork.RoomChatRepository.GetAllRoomChatByIdUser(userId);
             var roomRes = _mapper.Map<List<RoomChatDTO>>(rooms);
             _res.data = new { rooms = roomRes };
             return Ok(_res);
@@ -43,7 +40,7 @@ namespace ChatApp.Controllers
         [Route("{id:int}", Name = "getRoomChatById")]
         public async Task<ActionResult<Respone>> getRoomChatById([FromRoute] int id, [FromQuery] FilterQuery? query)
         {
-            var room = await _roomChatRepository.GetRoomChatById(id, query?.offset ?? 0, query?.limit ?? 10);
+            var room = await _unitOfWork.RoomChatRepository.GetRoomChatById(id, query?.offset ?? 0, query?.limit ?? 10);
             if (room == null)
             {
                 return NotFound(_res.errors = new { message = $"Not found room with id is {id}" });
@@ -60,7 +57,7 @@ namespace ChatApp.Controllers
             {
                 var claimsPrincipal = HttpContext.User;
                 string? userId = claimsPrincipal.Claims.FirstOrDefault(claim => claim.Type == "userId")?.Value;
-                var room = await _roomChatRepository.GetRoomChatPrivateBetweenTwoUser(int.Parse(userId), id);
+                var room = await _unitOfWork.RoomChatRepository.GetRoomChatPrivateBetweenTwoUser(int.Parse(userId), id);
                 _res.data = _mapper.Map<RoomChatDTO>(room);
                 return Ok(_res);
             }

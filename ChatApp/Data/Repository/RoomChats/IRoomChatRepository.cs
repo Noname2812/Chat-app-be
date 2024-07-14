@@ -1,4 +1,5 @@
-﻿using ChatApp.Models.MessageModels;
+﻿using ChatApp.Data.Modals;
+using ChatApp.Models.MessageModels;
 
 namespace ChatApp.Data.Repository.RoomChats
 {

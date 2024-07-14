@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ChatApp.Data.Repository.Users;
+using ChatApp.Data.UnitOfWork;
 using ChatApp.Models;
 using ChatApp.Models.DTOs;
 using ChatApp.Models.Query;
@@ -14,13 +15,13 @@ namespace ChatApp.Controllers
     [Authorize]
     public class searchController : ControllerBase
     {
-        private Respone _res;
-        private readonly IUserRepository _userRepository;
+        private readonly Respone _res;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public searchController(IUserRepository userRepository, IMapper mapper)
+        public searchController(IUnitOfWork unitOfWork, IMapper mapper, Respone respone)
         {
-            _res = new Respone();
-            _userRepository = userRepository;
+            _res = respone;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
 
         }
@@ -31,7 +32,7 @@ namespace ChatApp.Controllers
             try
             {
                 var userId = FunctionHelper.GetUserId(HttpContext);
-                var users = await _userRepository.SearchUserByQuery(value, int.Parse(userId));
+                var users = await _unitOfWork.UserRepository.SearchUserByQuery(value, int.Parse(userId));
                 _res.data = users;
                 return Ok(_res);
             }

@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
-using ChatApp.Data;
-using ChatApp.Data.Repository.Messages;
-using ChatApp.Data.Repository.Users;
+using ChatApp.Data.UnitOfWork;
 using ChatApp.Models;
 using ChatApp.Models.DTOs;
 using ChatApp.Models.RequestModels;
@@ -17,16 +15,16 @@ namespace ChatApp.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
-        private Respone _res;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly Respone _res;
         private readonly IMapper _mapper;
         private readonly IHubService _hubServices;
-        public UserController(IUserRepository userRepository, IMapper mapper, IHubService hubService)
+        public UserController(IUnitOfWork unitOfWork, IMapper mapper, IHubService hubService, Respone respone)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _hubServices = hubService;
-            _res = new();
+            _res = respone;
         }
         [HttpPut]
         [Route("update")]
@@ -45,7 +43,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Please provide user !";
                     return BadRequest(_res);
                 }
-                var userExist = await _userRepository.GetItemByQuery(x => x.Id == parsedUserId);
+                var userExist = await _unitOfWork.UserRepository.GetItemByQuery(x => x.Id == parsedUserId);
                 if (userExist == null)
                 {
                     _res.errors = "User Invalid";
@@ -56,7 +54,7 @@ namespace ChatApp.Controllers
                 userExist.Phone = user.Phone ?? userExist.Phone;
                 userExist.Avatar = user.Avatar ?? userExist.Avatar;
                 userExist.Address = user.Address ?? userExist.Address;
-                var userUdpdate = await _userRepository.Update(userExist);
+                var userUdpdate = await _unitOfWork.UserRepository.Update(userExist);
                 _res.data = new { message = "Update successfully !", user = _mapper.Map<UserDTO>(userUdpdate) };
                 return Ok(_res);
             }
@@ -90,7 +88,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Please provide user !";
                     return BadRequest(_res);
                 }
-                var userExist = await _userRepository.GetItemByQuery(x => x.Id == parsedUserId);
+                var userExist = await _unitOfWork.UserRepository.GetItemByQuery(x => x.Id == parsedUserId);
                 if (userExist == null)
                 {
                     _res.errors = "User Invalid";
@@ -102,7 +100,7 @@ namespace ChatApp.Controllers
                     return BadRequest(_res);
                 }
                 userExist.Password = user.newPassword ?? userExist.Password;
-                await _userRepository.Update(userExist);
+                await _unitOfWork.UserRepository.Update(userExist);
                 _res.data = new { message = "Change password successfully !" };
                 return Ok(_res);
             }
@@ -121,7 +119,7 @@ namespace ChatApp.Controllers
                 _res.errors = "Invalid user ID!";
                 return BadRequest(_res);
             }
-            var data = await _userRepository.GetReceivedFriendRequests(parsedUserId);
+            var data = await _unitOfWork.UserRepository.GetReceivedFriendRequests(parsedUserId);
             _res.data = _mapper.Map<List<UserDTO>>(data);
             return Ok(_res);
         }
@@ -145,7 +143,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-                var requestAddFriend = await _userRepository.SendFriendRequest(parsedUserId, body.FriendId);
+                var requestAddFriend = await _unitOfWork.UserRepository.SendFriendRequest(parsedUserId, body.FriendId);
                 await _hubServices.NotifyAddFriendRequest(new FriendShipDTO { UserId = parsedUserId, FriendId = body.FriendId, Status = "Pending" });
                 _res.data = new
                 {
@@ -180,7 +178,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-                await _userRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Accepted");
+                await _unitOfWork.UserRepository.UpdateFriendRequest(body.UserId , body.FriendId, "Accepted");
                 await _hubServices.NotifyAddFriendRequest(new FriendShipDTO { UserId = body.UserId, FriendId = body.FriendId, Status = "Accepted" });
                 _res.data = new
                 {
@@ -214,7 +212,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-                await _userRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Rejected");
+                await _unitOfWork.UserRepository.UpdateFriendRequest(parsedUserId, body.FriendId, "Rejected");
                 _res.data = new
                 {
                     message = "Rejected request successfully !"

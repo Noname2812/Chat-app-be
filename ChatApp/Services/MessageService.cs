@@ -1,4 +1,4 @@
-﻿using ChatApp.Data;
+﻿using ChatApp.Data.Modals;
 using ChatApp.Data.Repository.Messages;
 
 namespace ChatApp.Services

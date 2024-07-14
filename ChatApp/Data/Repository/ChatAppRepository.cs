@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using ChatApp.Data.Modals;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
@@ -51,12 +52,13 @@ namespace ChatApp.Data.Repository
                 return await _dbSet.AsNoTracking().Where(filter).Skip(offset).Take(limit).ToListAsync();
 
             }
-            return await _dbSet.AsNoTracking().Where(filter).Skip(offset).Take(limit).ToListAsync();
+            return await _dbSet.Where(filter).Skip(offset).Take(limit).ToListAsync();
         }
 
         public async Task<T> Update(T record)
         {
-            _dbContext.Update(record);
+            _dbSet.Attach(record);
+            _dbContext.Entry(record).State = EntityState.Modified;
             await _dbContext.SaveChangesAsync();
             return record;
         }

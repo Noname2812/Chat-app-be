@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using ChatApp.Data;
-using ChatApp.Data.Repository.Users;
-using ChatApp.Interfaces;
+using ChatApp.Data.Modals;
+using ChatApp.Data.UnitOfWork;
 using ChatApp.Models;
 using ChatApp.Models.DTOs;
 using ChatApp.Models.RequestModels;
 using ChatApp.Models.ResponeModels;
 using ChatApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -18,17 +18,17 @@ namespace ChatApp.Controllers
     [ApiController]
     public class authController : ControllerBase
     {
-        private Respone _res;
+        private readonly Respone _res;
         private readonly IConfiguration _configuration;
-        private readonly IUserRepository _dbContext;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ICacheService _cacheService;
 
-        public authController(IConfiguration configuration, IUserRepository dbContext, IMapper mapper, ICacheService cacheService)
+        public authController(IConfiguration configuration, IUnitOfWork unitOfWork, IMapper mapper, ICacheService cacheService, Respone respone)
         {
-            _res = new();
+            _res = respone;
             _configuration = configuration;
-            _dbContext = dbContext;
+            _unitOfWork = unitOfWork;
             _mapper = mapper;
             _cacheService = cacheService;
         }
@@ -46,7 +46,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Please enter your infomation !";
                     return BadRequest(_res);
                 }
-                var isExists = await _dbContext.GetItemByQuery(x => x.UserName == user.UserName);
+                var isExists = await _unitOfWork.UserRepository.GetItemByQuery(x => x.UserName == user.UserName);
                 if (isExists != null)
                 {
                     _res.errors = new
@@ -55,7 +55,7 @@ namespace ChatApp.Controllers
                     };
                     return StatusCode(StatusCodes.Status406NotAcceptable, _res);
                 }
-                User newUser = await _dbContext.Create(new User
+                User newUser = await _unitOfWork.UserRepository.Create(new User
                 {
                     IsOnline = false,
                     Address = user.Address,
@@ -91,7 +91,7 @@ namespace ChatApp.Controllers
             }
             try
             {
-                User? userExists = await _dbContext.GetItemByQuery(x => x.UserName == loginModel.Username && x.Password == loginModel.Password);
+                User? userExists = await _unitOfWork.UserRepository.GetItemByQuery(x => x.UserName == loginModel.Username && x.Password == loginModel.Password);
 
                 if (userExists == null)
                 {
@@ -106,7 +106,7 @@ namespace ChatApp.Controllers
                 // save cache
                 await _cacheService.SetData($"refreshToken:{userExists.Id}", refreshToken, TimeSpan.FromDays(10));
                 // update database
-                await _dbContext.UpdateStatusOnline(userExists.Id, true);
+                await _unitOfWork.UserRepository.UpdateStatusOnline(userExists.Id, true);
                 _res.data = new { message = "Login successfully !", user = _mapper.Map<UserDTO>(userExists), token = tokenGenarated, refreshToken };
                 return Ok(_res);
             }
@@ -123,7 +123,7 @@ namespace ChatApp.Controllers
         [Route("login-with-google", Name = "loginWithGoogle")]
         public async Task<ActionResult<Respone>> loginWithGoogle([FromBody] LoginWithGoogle body)
         {
-            var isExists = await _dbContext.GetItemByQuery(x => x.Email == body.Email);
+            var isExists = await _unitOfWork.UserRepository.GetItemByQuery(x => x.Email == body.Email);
             var refreshToken = FunctionHelper.GenerateRefreshToken();
             if (isExists == null)
             {
@@ -140,7 +140,7 @@ namespace ChatApp.Controllers
                     userTypeId = 4,
                     Phone = ""
                 };
-                var user = await _dbContext.Create(newUser);
+                var user = await _unitOfWork.UserRepository.Create(newUser);
                 var token = FunctionHelper.GenarateToken(_configuration, user.Id);
                 _res.data = new { message = "Login successfully !", user, token, refreshToken };
                 return Ok(_res);
@@ -152,6 +152,7 @@ namespace ChatApp.Controllers
 
         [HttpPost]
         [Route("refresh-token", Name = "RefreshToken")]
+        [Authorize]
         public async Task<ActionResult<Respone>> RefreshToken([FromBody] Token token)
         {
             try
@@ -188,7 +189,7 @@ namespace ChatApp.Controllers
                     _res.errors = "Invalid user ID!";
                     return BadRequest(_res);
                 }
-                User? user = await _dbContext.GetItemByQuery(x => x.Id == parsedUserId);
+                User? user = await _unitOfWork.UserRepository.GetItemByQuery(x => x.Id == parsedUserId);
                 if (user == null)
                 {
                     _res.errors = "User not found!";
@@ -207,6 +208,8 @@ namespace ChatApp.Controllers
                 }
                 var newAccessToken = FunctionHelper.GenarateToken(_configuration, user.Id);
                 var newRefreshToken = FunctionHelper.GenerateRefreshToken();
+                
+                await _cacheService.SetData($"black-list-token:{jwtToken}", jwtToken, TimeSpan.FromSeconds(600));
                 await _cacheService.SetData($"refreshToken:{parsedUserId}", newRefreshToken, TimeSpan.FromDays(10));
                 _res.data = new
                 {
@@ -239,7 +242,7 @@ namespace ChatApp.Controllers
                 }
                 string userId = userIdClaim.Value;
                 // update database
-                await _dbContext.UpdateStatusOnline(int.Parse(userId), false);
+                await _unitOfWork.UserRepository.UpdateStatusOnline(int.Parse(userId), false);
                 // add token into blackList cache
                 var token = Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 await _cacheService.SetData($"black-list-token:{token}", token, TimeSpan.FromSeconds(600));

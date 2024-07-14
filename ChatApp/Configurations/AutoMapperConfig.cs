@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using ChatApp.Data;
+using ChatApp.Data.Modals;
 using ChatApp.Models.DTOs;
 
 namespace ChatApp.Configurations

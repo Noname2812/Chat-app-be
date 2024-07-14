@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq;
+﻿using ChatApp.Data.Modals;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChatApp.Data.Repository.RoomChats
 {

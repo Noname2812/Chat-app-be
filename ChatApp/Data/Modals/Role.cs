@@ -1,6 +1,4 @@
-﻿using WebAPI.Data;
-
-namespace ChatApp.Data
+﻿namespace ChatApp.Data.Modals
 {
     public class Role
     {

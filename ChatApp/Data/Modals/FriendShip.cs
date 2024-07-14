@@ -1,6 +1,4 @@
-﻿using ChatApp.Data;
-
-namespace ChatApp.Data
+﻿namespace ChatApp.Data.Modals
 {
     public class Friendship
     {

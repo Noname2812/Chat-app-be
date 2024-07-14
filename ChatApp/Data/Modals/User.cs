@@ -1,7 +1,4 @@
-﻿using WebAPI.Data;
-
-
-namespace ChatApp.Data
+﻿namespace ChatApp.Data.Modals
 {
     public class User
     {
@@ -12,7 +9,7 @@ namespace ChatApp.Data
         public string? Address { get; set; }
         public string Password { get; set; }
         public string UserName { get; set; }
-        public string? Avatar {  get; set; }
+        public string? Avatar { get; set; }
         public DateTime? createAt { get; set; }
         public DateTime? modifiedDate { get; set; }
         public DateTime? LastOnline { get; set; }
